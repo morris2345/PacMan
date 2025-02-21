@@ -13,6 +13,7 @@ class CustomPacManEnv(gym.Env):
         self.ghost_amount = 4 #amount of ghosts in the maze
         self.ghosts = [] #ghost positions
         self.pills = [] #pill positions
+        self.pacman = [] #pacman position
 
         # Define available maze files
         self.maze_files = {
@@ -58,6 +59,13 @@ class CustomPacManEnv(gym.Env):
                 self.grid[x, y] = 3 #Add ghost (3) to grid
                 self.ghosts.append((x, y)) #Add ghost position to array
                 empty_cells.remove((x, y)) #Remove empty cell from list
+
+        #Place PacMan
+        if(empty_cells):
+                x, y = random.choice(empty_cells)
+                self.grid[x, y] = 5 #Add PacMan (5) to grid
+                empty_cells.remove((x, y)) #Remove empty cell from list
+                self.pacman.append((x,y)) #Add pacman position to array
 
         #Place food in left empty spaces
         for x, y in empty_cells:
