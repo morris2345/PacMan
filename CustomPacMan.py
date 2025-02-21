@@ -2,6 +2,7 @@ import gymnasium as gym
 from gymnasium import spaces
 import numpy as np
 import random
+from collections import deque
 
 class CustomPacManEnv(gym.Env):
     metadata = {"render_modes": ["human"], "render_fps": 10}
@@ -13,7 +14,7 @@ class CustomPacManEnv(gym.Env):
         self.ghost_amount = 4 #amount of ghosts in the maze
         self.ghosts = [] #ghost positions
         self.pills = [] #pill positions
-        self.pacman #pacman position
+        self.pacman = () #pacman position
 
         # Define available maze files
         self.maze_files = {
@@ -73,3 +74,50 @@ class CustomPacManEnv(gym.Env):
 
         #print(self.pills)
         #print(self.ghosts)
+
+
+    def bfsPathFinding(self, ghost_pos):
+        queue = deque([(ghost_pos, [])]) #create dubble ended queue with current pos and path
+        visited = set()
+
+        while queue:
+            (x, y), path = queue.popleft()
+
+            #check if on pacman, return first step of path
+            if(x, y) == self.pacman:
+                return path[0]
+            
+            for direction_x, direction_y in [(-1, 0), (1, 0), (0, -1), (0, 1)]:  #up, down, left, right
+                next_x, next_y = x + direction_x, y + direction_y
+
+                if(next_x, next_y) not in visited and self.grid[next_x,next_y] != 1: #not visited & not wall
+                    queue.append(((next_x, next_y), path + [(next_x, next_y)]))
+                    visited.add((next_x,next_y))
+
+
+    def ghostSemiRandomMove(self, ghost_pos, chase_prob):
+        if random.uniform(0,1) <= chase_prob:
+            print('test')
+            return self.bfsPathFinding(ghost_pos)
+        else:
+            x, y = ghost_pos
+            valid_moves = []
+
+            for direction_x, direction_y in [(-1, 0), (1, 0), (0, -1), (0, 1)]:  #up, down, left, right
+                next_x, next_y = x + direction_x, y + direction_y
+                if self.grid[next_x, next_y] != 1: #not wall
+                    valid_moves.append((next_x, next_y))
+
+            return random.choice(valid_moves)
+
+
+    def step(self):
+        
+        #pacman action
+
+        for i in range(self.ghost_amount):
+            ghost_pos = self.ghosts[i]
+            new_pos = self.ghostSemiRandomMove(ghost_pos, 0.7)
+            self.grid[ghost_pos] = 0 # clear ghost                           !!! still need to change back to food/pill if it was there !!!
+            self.ghosts[i] = new_pos
+            self.grid[new_pos] = 3 #set to ghost

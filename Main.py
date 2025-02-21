@@ -7,6 +7,15 @@ def main():
 
     print(env.grid)
 
+    env.step()
+    print("--------------------------------------------------")
+    print(env.grid)
+
+    env.step()
+    print("--------------------------------------------------")
+    print(env.grid)
+
+
     env.close
 
 if __name__=="__main__":
