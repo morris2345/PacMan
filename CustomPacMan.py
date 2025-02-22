@@ -15,6 +15,8 @@ class CustomPacManEnv(gym.Env):
         self.ghosts = [] #ghost positions
         self.pills = [] #pill positions
         self.pacman = () #pacman position
+        self.pill_duration = 30
+        self.pill_active = True
 
         # Define available maze files
         self.maze_files = {
@@ -96,19 +98,36 @@ class CustomPacManEnv(gym.Env):
 
 
     def ghostSemiRandomMove(self, ghost_pos, chase_prob):
-        if random.uniform(0,1) <= chase_prob:
-            print('test')
-            return self.bfsPathFinding(ghost_pos)
-        else:
-            x, y = ghost_pos
-            valid_moves = []
+        x, y = ghost_pos
 
-            for direction_x, direction_y in [(-1, 0), (1, 0), (0, -1), (0, 1)]:  #up, down, left, right
+        if self.pill_active == True: #If PacMan can eat ghosts
+            valid_moves = []
+            moves = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+
+            bfs_location = self.bfsPathFinding(ghost_pos) #Returns the best location to move to when going towards PacMan
+            bfs_move = (bfs_location[0] - x, bfs_location[1] - y) #Returns the best move (up, down, left, right) when going towards PacMan
+            moves.remove(bfs_move) #Remove best move for going towards PacMan, because ghost is running away
+
+            for direction_x, direction_y in moves:
                 next_x, next_y = x + direction_x, y + direction_y
                 if self.grid[next_x, next_y] != 1: #not wall
                     valid_moves.append((next_x, next_y))
 
             return random.choice(valid_moves)
+
+        else: #If PacMan can get eaten
+            if random.uniform(0,1) <= chase_prob:
+                print('test')
+                return self.bfsPathFinding(ghost_pos) #Move with shortest path towards PacMan
+            else:
+                valid_moves = []
+
+                for direction_x, direction_y in [(-1, 0), (1, 0), (0, -1), (0, 1)]:  #up, down, left, right
+                    next_x, next_y = x + direction_x, y + direction_y
+                    if self.grid[next_x, next_y] != 1: #not wall
+                        valid_moves.append((next_x, next_y))
+
+                return random.choice(valid_moves)
 
 
     def step(self):
