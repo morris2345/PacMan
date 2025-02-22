@@ -14,9 +14,10 @@ class CustomPacManEnv(gym.Env):
         self.ghost_amount = 4 #amount of ghosts in the maze
         self.ghosts = [] #ghost positions
         self.pills = [] #pill positions
-        self.pacman = () #pacman position
+        self.pacman_pos = () #pacman position
         self.pill_duration = 30
-        self.pill_active = True
+        self.pill_active = False
+        self.algo = "random"
 
         # Define available maze files
         self.maze_files = {
@@ -68,7 +69,7 @@ class CustomPacManEnv(gym.Env):
                 x, y = random.choice(empty_cells)
                 self.grid[x, y] = 5 #Add PacMan (5) to grid
                 empty_cells.remove((x, y)) #Remove empty cell from list
-                self.pacman = (x,y) #Add pacman position to array
+                self.pacman_pos = (x,y) #Add pacman position to array
 
         #Place food in left empty spaces
         for x, y in empty_cells:
@@ -76,6 +77,22 @@ class CustomPacManEnv(gym.Env):
 
         #print(self.pills)
         #print(self.ghosts)
+
+    def move_PacMan(self):
+        if(self.algo == "random"):
+            x, y = self.pacman_pos
+            valid_moves = []
+            for direction_x, direction_y in [(-1, 0), (1, 0), (0, -1), (0, 1)]:  #up, down, left, right
+                next_x, next_y = x + direction_x, y + direction_y
+                if self.grid[next_x, next_y] != 1: #not wall
+                    valid_moves.append((next_x, next_y))
+
+            return random.choice(valid_moves)
+
+        elif(self.algo == "QL"):
+            return
+        elif(self.algo == "QRM"):
+            return
 
 
     def bfsPathFinding(self, ghost_pos):
@@ -86,7 +103,7 @@ class CustomPacManEnv(gym.Env):
             (x, y), path = queue.popleft()
 
             #check if on pacman, return first step of path
-            if(x, y) == self.pacman:
+            if(x, y) == self.pacman_pos:
                 return path[0]
             
             for direction_x, direction_y in [(-1, 0), (1, 0), (0, -1), (0, 1)]:  #up, down, left, right
@@ -133,7 +150,12 @@ class CustomPacManEnv(gym.Env):
     def step(self):
         
         #pacman action
+        new_pos = self.move_PacMan()
+        self.grid[self.pacman_pos] = 0 #Clear field
+        self.pacman_pos = new_pos
+        self.grid[new_pos] = 5 # set to PacMan
 
+        #ghosts actions
         for i in range(self.ghost_amount):
             ghost_pos = self.ghosts[i]
             new_pos = self.ghostSemiRandomMove(ghost_pos, 0.7)
