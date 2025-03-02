@@ -84,7 +84,7 @@ class CustomPacManEnv(gym.Env):
         #print(self.pills)
         #print(self.ghosts)
 
-    def pacManInteract(self, new_pos):
+    def movePacMan(self, new_pos):
         if(self.grid[new_pos] == 4):#moved to food
             self.food_count -= 1
             self.score += self.food_reward
@@ -102,7 +102,7 @@ class CustomPacManEnv(gym.Env):
         self.pacman_pos = new_pos
         self.grid[new_pos] = 5 # set to PacMan
 
-    def move_PacMan(self):
+    def chooseActionPacMan(self):
         if(self.algo == "random"):
             x, y = self.pacman_pos
             valid_moves = []
@@ -174,10 +174,7 @@ class CustomPacManEnv(gym.Env):
     def step(self):
         
         #pacman action
-        new_pos = self.move_PacMan()
-        self.pacManInteract(self, new_pos)
-        if(self.pill_active):
-            self.pill_duration -= 1
+        new_pos = self.chooseActionPacMan()#choose action
 
         #ghosts actions
         for i in range(self.ghost_amount):
@@ -186,3 +183,8 @@ class CustomPacManEnv(gym.Env):
             self.grid[ghost_x, ghost_y] = previous_value # clear ghost
             self.ghosts[i] = (new_pos[0], new_pos[1], self.grid[new_pos])
             self.grid[new_pos] = 3 #set to ghost
+
+        #move PacMan
+        self.movePacMan(self, new_pos)
+        if(self.pill_active):
+            self.pill_duration -= 1
