@@ -89,11 +89,11 @@ class CustomPacManEnv(gym.Env):
         if(self.grid[new_pos] == 4):#moved to food
             self.food_count -= 1
             self.score += self.food_reward
-        elif(self.grid[new_pos == 2]):#moved to pill
+        elif(self.grid[new_pos] == 2):#moved to pill
             self.pill_active = True
             self.pill_duration = self.pill_start_duration
             self.pill_count -= 1
-        elif(self.grid[new_pos == 3]):#move to ghost
+        elif(self.grid[new_pos] == 3):#move to ghost
             if(self.pill_active):
                 #eat ghost/respawn ghost
                 self.score += self.eat_ghost_reward
@@ -188,11 +188,11 @@ class CustomPacManEnv(gym.Env):
             self.grid[new_pos] = 3 #set to ghost
 
         #move PacMan
-        self.movePacMan(self, new_pos)
+        self.movePacMan(new_pos)
         if(self.pill_active):
             self.pill_duration -= 1
             new_pos = self.chooseActionPacMan()#choose extra action
-            self.movePacMan(self, new_pos)#do extra action
+            self.movePacMan(new_pos)#do extra action
             if(self.pill_duration <= 0):
                 self.pill_active = False
 
