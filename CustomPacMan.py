@@ -10,11 +10,12 @@ class CustomPacManEnv(gym.Env):
     def __init__(self, maze_size="normal"):
         super().__init__()
 
-        self.pill_amount = 4 #amount of pills in the maze
-        self.ghost_amount = 4 #amount of ghosts in the maze
+        self.pill_count = 4 #amount of pills in the maze
+        self.ghost_count = 4 #amount of ghosts in the maze
         self.ghosts = [] #ghost positions
         self.pills = [] #pill positions
         self.pacman_pos = () #pacman position
+        self.pill_start_duration = 10
         self.pill_duration = 10#amount of moves before pill goes unactive
         self.pill_active = False
         self.algo = "random"
@@ -55,7 +56,7 @@ class CustomPacManEnv(gym.Env):
         empty_cells = list(zip(*np.where(self.grid == 0)))
 
         #Place Pills
-        for i in range(self.pill_amount):
+        for i in range(self.pill_count):
             if(empty_cells):
                 x, y = random.choice(empty_cells)
                 self.grid[x, y] = 2 #Add Pill (2) to grid
@@ -63,7 +64,7 @@ class CustomPacManEnv(gym.Env):
                 self.pills.append((x,y)) #Add pill position to array
 
         #Place Ghosts
-        for i in range(self.ghost_amount):
+        for i in range(self.ghost_count):
             if(empty_cells):
                 x, y = random.choice(empty_cells)
                 self.grid[x, y] = 3 #Add ghost (3) to grid
@@ -90,6 +91,8 @@ class CustomPacManEnv(gym.Env):
             self.score += self.food_reward
         elif(self.grid[new_pos == 2]):#moved to pill
             self.pill_active = True
+            self.pill_duration = self.pill_start_duration
+            self.pill_count -= 1
         elif(self.grid[new_pos == 3]):#move to ghost
             if(self.pill_active):
                 #eat ghost/respawn ghost
@@ -177,7 +180,7 @@ class CustomPacManEnv(gym.Env):
         new_pos = self.chooseActionPacMan()#choose action
 
         #ghosts actions
-        for i in range(self.ghost_amount):
+        for i in range(self.ghost_count):
             ghost_x, ghost_y, previous_value = self.ghosts[i]
             new_pos = self.ghostSemiRandomMove((ghost_x, ghost_y), 0.7)
             self.grid[ghost_x, ghost_y] = previous_value # clear ghost
@@ -188,3 +191,14 @@ class CustomPacManEnv(gym.Env):
         self.movePacMan(self, new_pos)
         if(self.pill_active):
             self.pill_duration -= 1
+            new_pos = self.chooseActionPacMan()#choose extra action
+            self.movePacMan(self, new_pos)#do extra action
+            if(self.pill_duration <= 0):
+                self.pill_active = False
+
+        if(self.lives <= 0):
+            #lose
+            return
+        elif(self.food_count <= 0):
+            #win
+            return
