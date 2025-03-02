@@ -82,9 +82,6 @@ class CustomPacManEnv(gym.Env):
         for x, y in empty_cells:
             self.grid[x, y] = 4 #Add Food (4) to grid
 
-        #print(self.pills)
-        #print(self.ghosts)
-
     def movePacMan(self, new_pos):
         if(self.grid[new_pos] == 4):#moved to food
             self.food_count -= 1
@@ -131,7 +128,6 @@ class CustomPacManEnv(gym.Env):
 
             #check if on pacman, return first step of path
             if(x, y) == self.pacman_pos:
-                print(path[0])
                 return path[0]
             
             for direction_x, direction_y in [(-1, 0), (1, 0), (0, -1), (0, 1)]:  #up, down, left, right
@@ -162,10 +158,7 @@ class CustomPacManEnv(gym.Env):
 
         else: #If PacMan can get eaten
             if random.uniform(0,1) <= chase_prob:
-                print('test')
-                test_x, test_y = self.bfsPathFinding(ghost_pos)
-                print(test_x, test_y)
-                return (test_x, test_y) #Move with shortest path towards PacMan
+                return self.bfsPathFinding(ghost_pos) #Move with shortest path towards PacMan
             else:
                 valid_moves = []
 
