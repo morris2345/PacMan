@@ -15,10 +15,13 @@ class CustomPacManEnv(gym.Env):
         self.ghosts = [] #ghost positions
         self.pills = [] #pill positions
         self.pacman_pos = () #pacman position
-        self.pill_duration = 30
+        self.pill_duration = 10#amount of moves before pill goes unactive
         self.pill_active = False
         self.algo = "random"
         self.lives = 1
+        self.score = 0
+        self.food_reward = 100
+        self.eat_ghost_reward = 200
 
         # Define available maze files
         self.maze_files = {
@@ -30,6 +33,8 @@ class CustomPacManEnv(gym.Env):
         self.maze_size = maze_size
         self.grid = self.loadMaze()  # Load the maze from file
         self.fillMaze()#Fill maze with Pills, Ghosts & Food
+
+        self.food_count = np.count_nonzero(self.grid == 4) #amount of food in the maze
 
         # Define action space (UP, DOWN, LEFT, RIGHT)
         self.action_space = spaces.Discrete(4)
@@ -78,6 +83,24 @@ class CustomPacManEnv(gym.Env):
 
         #print(self.pills)
         #print(self.ghosts)
+
+    def pacManInteract(self, new_pos):
+        if(self.grid[new_pos] == 4):#moved to food
+            self.food_count -= 1
+            self.score += self.food_reward
+        elif(self.grid[new_pos == 2]):#moved to pill
+            self.pill_active = True
+        elif(self.grid[new_pos == 3]):#move to ghost
+            if(self.pill_active):
+                #eat ghost/respawn ghost
+                self.score += self.eat_ghost_reward
+            else:
+                self.lives -= 1
+
+
+        self.grid[self.pacman_pos] = 0 #Clear field
+        self.pacman_pos = new_pos
+        self.grid[new_pos] = 5 # set to PacMan
 
     def move_PacMan(self):
         if(self.algo == "random"):
@@ -152,9 +175,9 @@ class CustomPacManEnv(gym.Env):
         
         #pacman action
         new_pos = self.move_PacMan()
-        self.grid[self.pacman_pos] = 0 #Clear field
-        self.pacman_pos = new_pos
-        self.grid[new_pos] = 5 # set to PacMan
+        self.pacManInteract(self, new_pos)
+        if(self.pill_active):
+            self.pill_duration -= 1
 
         #ghosts actions
         for i in range(self.ghost_amount):
