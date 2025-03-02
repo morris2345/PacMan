@@ -131,6 +131,7 @@ class CustomPacManEnv(gym.Env):
 
             #check if on pacman, return first step of path
             if(x, y) == self.pacman_pos:
+                print(path[0])
                 return path[0]
             
             for direction_x, direction_y in [(-1, 0), (1, 0), (0, -1), (0, 1)]:  #up, down, left, right
@@ -162,7 +163,9 @@ class CustomPacManEnv(gym.Env):
         else: #If PacMan can get eaten
             if random.uniform(0,1) <= chase_prob:
                 print('test')
-                return self.bfsPathFinding(ghost_pos) #Move with shortest path towards PacMan
+                test_x, test_y = self.bfsPathFinding(ghost_pos)
+                print(test_x, test_y)
+                return (test_x, test_y) #Move with shortest path towards PacMan
             else:
                 valid_moves = []
 
@@ -177,7 +180,7 @@ class CustomPacManEnv(gym.Env):
     def step(self):
         
         #pacman action
-        new_pos = self.chooseActionPacMan()#choose action
+        new_pos_pacMan = self.chooseActionPacMan()#choose action
 
         #ghosts actions
         for i in range(self.ghost_count):
@@ -188,11 +191,11 @@ class CustomPacManEnv(gym.Env):
             self.grid[new_pos] = 3 #set to ghost
 
         #move PacMan
-        self.movePacMan(new_pos)
+        self.movePacMan(new_pos_pacMan)
         if(self.pill_active):
             self.pill_duration -= 1
-            new_pos = self.chooseActionPacMan()#choose extra action
-            self.movePacMan(new_pos)#do extra action
+            new_pos_pacMan = self.chooseActionPacMan()#choose extra action
+            self.movePacMan(new_pos_pacMan)#do extra action
             if(self.pill_duration <= 0):
                 self.pill_active = False
 
