@@ -18,6 +18,7 @@ class CustomPacManEnv(gym.Env):
         self.pill_duration = 30
         self.pill_active = False
         self.algo = "random"
+        self.lives = 1
 
         # Define available maze files
         self.maze_files = {
@@ -61,7 +62,7 @@ class CustomPacManEnv(gym.Env):
             if(empty_cells):
                 x, y = random.choice(empty_cells)
                 self.grid[x, y] = 3 #Add ghost (3) to grid
-                self.ghosts.append((x, y)) #Add ghost position to array
+                self.ghosts.append((x, y, 4)) #Add ghost position to array
                 empty_cells.remove((x, y)) #Remove empty cell from list
 
         #Place PacMan
@@ -157,8 +158,8 @@ class CustomPacManEnv(gym.Env):
 
         #ghosts actions
         for i in range(self.ghost_amount):
-            ghost_pos = self.ghosts[i]
-            new_pos = self.ghostSemiRandomMove(ghost_pos, 0.7)
-            self.grid[ghost_pos] = 0 # clear ghost                           !!! still need to change back to food/pill if it was there !!!
-            self.ghosts[i] = new_pos
+            ghost_x, ghost_y, previous_value = self.ghosts[i]
+            new_pos = self.ghostSemiRandomMove((ghost_x, ghost_y), 0.7)
+            self.grid[ghost_x, ghost_y] = previous_value # clear ghost
+            self.ghosts[i] = (new_pos[0], new_pos[1], self.grid[new_pos])
             self.grid[new_pos] = 3 #set to ghost
