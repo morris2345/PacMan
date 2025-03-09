@@ -1,5 +1,6 @@
 import gymnasium as gym
 from CustomPacMan import CustomPacManEnv
+import time
 
 def main():
     env = CustomPacManEnv(maze_size="normal")

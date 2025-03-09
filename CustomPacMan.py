@@ -4,6 +4,7 @@ import numpy as np
 import random
 from collections import deque
 import math
+import pygame
 
 class CustomPacManEnv(gym.Env):
     metadata = {"render_modes": ["human"], "render_fps": 10}
@@ -17,9 +18,9 @@ class CustomPacManEnv(gym.Env):
         self.ghosts = [] #ghost positions
         self.pills = [] #pill positions
         self.pacman_pos = () #pacman position
-        self.pill_start_duration = 100
-        self.pill_duration = 100#amount of moves before pill goes unactive
-        self.pill_active = False
+        self.pill_start_duration = 10000
+        self.pill_duration = 10000#amount of moves before pill goes unactive
+        self.pill_active = True
         self.algo = "random"
         self.lives = 1
         self.score = 0
@@ -179,9 +180,9 @@ class CustomPacManEnv(gym.Env):
     def respawnGhost(self, ghost_index):
         distance = 10
 
-        empty_cells = list(zip(*np.where(self.grid == 0 or self.grid == 4 or self.grid == 2)))
+        empty_cells = list(zip(*np.where((self.grid == 0) | (self.grid == 4) | (self.grid == 2))))
         
-        valid_cells = [cell for cell in empty_cells if (math.dist(self.pacman_pos, self.ghosts[ghost_index] <= distance))]
+        valid_cells = [cell for cell in empty_cells if (math.dist(self.pacman_pos, self.ghosts[ghost_index]) <= distance)]
 
         if(valid_cells == None):
             print("No cell found to respawn ghost")
@@ -196,10 +197,10 @@ class CustomPacManEnv(gym.Env):
         new_pos_pacMan = self.chooseActionPacMan()#choose action
 
         #ghosts actions
-        for i in range(self.ghost_count):
-            ghost_x, ghost_y = self.ghosts[i]
-            new_pos = self.ghostSemiRandomMove((ghost_x, ghost_y), 0.7)
-            self.ghosts[i] = (new_pos[0], new_pos[1])
+        #for i in range(self.ghost_count):
+            #ghost_x, ghost_y = self.ghosts[i]
+            #new_pos = self.ghostSemiRandomMove((ghost_x, ghost_y), 0.7)
+            #self.ghosts[i] = (new_pos[0], new_pos[1])
 
         #move PacMan
         self.movePacMan(new_pos_pacMan)
