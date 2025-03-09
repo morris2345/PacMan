@@ -5,13 +5,13 @@ def main():
     env = CustomPacManEnv(maze_size="normal")
 
     print(env.grid)
+    while(env.play == True):
+    #for i in range(25):
+        env.step()
+        print("--------------------------------------------------")
+        print(env.grid)
+        print(env.pill_active)
 
-    env.step()
-    print("--------------------------------------------------")
-    print(env.grid)
-
-    env.step()
-    print("--------------------------------------------------")
     print(env.grid)
 
 
