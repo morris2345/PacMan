@@ -8,7 +8,7 @@ def main():
     print(env.grid)
     while(env.play == True):
     #for i in range(25):
-        env.step()
+        env.step(use_greedy_strategy=False)
         print("--------------------------------------------------")
         print(env.grid)
         print(env.pill_active)

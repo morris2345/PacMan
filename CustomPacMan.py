@@ -19,13 +19,15 @@ class CustomPacManEnv(gym.Env):
         self.pills = [] #pill positions
         self.pacman_pos = () #pacman position
         self.pill_start_duration = 100
-        self.pill_duration = 100#amount of moves before pill goes unactive
+        self.pill_duration = 0 #amount of moves before pill goes unactive
         self.pill_active = False
-        self.algo = "random"
+        self.algo = "QL"
         self.lives = 1
         self.score = 0
         self.food_reward = 100
         self.eat_ghost_reward = 200
+        self.pickup_pill_reward = 50
+        self.lose_live_reward = -1000
 
         # Define available maze files
         self.maze_files = {
@@ -42,6 +44,12 @@ class CustomPacManEnv(gym.Env):
 
         # Define action space (UP, DOWN, LEFT, RIGHT)
         self.action_space = spaces.Discrete(4)
+
+        #Q-Learning Parameters
+        self.alpha = 0.1 # Learning rate
+        self.gamma = 0.9 # Discount factor
+        self.epsilon = 0.1 # Exploration rate
+        self.q_table = np.zeros((self.grid.shape[0], self.grid.shape[1], 4)) #QTable. 4 = up,down,right,left
 
 
     #Load the maze file containing walls & empty spaces
@@ -86,13 +94,17 @@ class CustomPacManEnv(gym.Env):
             self.grid[x, y] = 4 #Add Food (4) to grid
 
     def movePacMan(self, new_pos):
+        reward = 0
         if(self.grid[new_pos] == 4):#moved to food
             self.food_count -= 1
             self.score += self.food_reward
+            reward = self.food_reward
         elif(self.grid[new_pos] == 2):#moved to pill
             self.pill_active = True
             self.pill_duration = self.pill_start_duration
             self.pill_count -= 1
+            self.score += self.pickup_pill_reward
+            reward = self.pickup_pill_reward
 
         #check ghost interactions
         for i in range(self.ghost_count):
@@ -102,15 +114,19 @@ class CustomPacManEnv(gym.Env):
                 if(self.pill_active == True):
                     self.respawnGhost(i)
                     self.score += self.eat_ghost_reward
+                    reward += self.eat_ghost_reward
                 else:
                     self.lives -= 1
+                    reward += self.lose_live_reward
 
 
         self.grid[self.pacman_pos] = 0 #Clear field
         self.pacman_pos = new_pos
         self.grid[new_pos] = 5 # set to PacMan
 
-    def chooseActionPacMan(self):
+        return reward
+
+    def chooseActionPacMan(self, use_greedy_strategy):
         if(self.algo == "random"):
             x, y = self.pacman_pos
             valid_moves = []
@@ -119,13 +135,57 @@ class CustomPacManEnv(gym.Env):
                 if self.grid[next_x, next_y] != 1: #not wall
                     valid_moves.append((next_x, next_y))
 
-            return random.choice(valid_moves)
+            return random.choice(valid_moves), (direction_x, direction_y)
 
         elif(self.algo == "QL"):
-            return
+            new_pos, action = self.QLearningAction(use_greedy_strategy)
+            return new_pos, action
         elif(self.algo == "QRM"):
             return
 
+    def QLearningAction(self, use_greedy_strategy):
+        x, y = self.pacman_pos
+
+        if not use_greedy_strategy:
+            #explore
+            if random.random() < self.epsilon:
+                valid_moves = []
+                for action, (direction_x, direction_y) in enumerate([(-1, 0), (1, 0), (0, -1), (0, 1)]):
+                    next_x, next_y = x + direction_x, y + direction_y
+                    if self.grid[next_x, next_y] != 1:  # Not a wall
+                        valid_moves.append((action, (next_x, next_y)))
+
+                chosen_action, next_pos = random.choice(valid_moves)
+                return next_pos, self.action_to_direction(chosen_action)
+            
+        #exploit    
+        valid_moves = []
+        for action, (direction_x, direction_y) in enumerate([(-1, 0), (1, 0), (0, -1), (0, 1)]):
+            next_x, next_y = x + direction_x, y + direction_y
+            if self.grid[next_x, next_y] != 1:  # Not a wall
+                valid_moves.append((action, (next_x, next_y)))
+
+        best_action, next_pos = max(valid_moves, key=lambda move: self.q_table[x, y, move[0]])#check Q-value for every move in valid_moves. move[0] is the action
+        return next_pos, self.action_to_direction(best_action)
+
+    def action_to_direction(self, action):
+        if action == 0:  # UP
+            return (-1, 0)
+        elif action == 1:  # DOWN
+            return (1, 0)
+        elif action == 2:  # LEFT
+            return (0, -1)
+        elif action == 3:  # RIGHT
+            return (0, 1)
+        
+    def updateQTable(self, state, action, reward, next_state):
+        x,y = state
+        nx, ny = next_state
+
+        q_current = self.q_table[x, y, action]
+        q_next_max = np.max(self.q_table[nx, ny])
+        q_update = reward + self.gamma * q_next_max
+        self.q_table[x, y, action] += self.alpha * (q_update - q_current)
 
     def bfsPathFinding(self, ghost_pos):
         queue = deque([(ghost_pos, [])]) #create dubble ended queue with current pos and path
@@ -191,10 +251,13 @@ class CustomPacManEnv(gym.Env):
             self.ghosts[ghost_index] = (new_ghost_x, new_ghost_y)
 
 
-    def step(self):
+    def step(self, use_greedy_strategy):
         
+        #store current PacMan Position
+        current_PacMan_pos = self.pacman_pos
+
         #pacman action
-        new_pos_pacMan = self.chooseActionPacMan()#choose action
+        new_pos_pacMan, action = self.chooseActionPacMan(use_greedy_strategy)#choose action
 
         #ghosts actions
         for i in range(self.ghost_count):
@@ -202,23 +265,35 @@ class CustomPacManEnv(gym.Env):
             new_pos = self.ghostSemiRandomMove((ghost_x, ghost_y), 0.7)
             self.ghosts[i] = (new_pos[0], new_pos[1])
 
-        #move PacMan
-        self.movePacMan(new_pos_pacMan)
+        #move PacMan & store reward
+        reward = self.movePacMan(new_pos_pacMan)
+
+        self.updateQTable(state=current_PacMan_pos, action=action, reward=reward, next_state=self.pacman_pos)
+
         if(self.pill_active):
+            #store current PacMan Position
+            current_PacMan_pos = self.pacman_pos
+
+            new_pos_pacMan, action = self.chooseActionPacMan(use_greedy_strategy)#choose extra action
+
+            #move PacMan & store reward
+            reward = self.movePacMan(new_pos_pacMan)#do extra action
+
+            self.updateQTable(state=current_PacMan_pos, action=action, reward=reward, next_state=self.pacman_pos)
+
             self.pill_duration -= 1
-            new_pos_pacMan = self.chooseActionPacMan()#choose extra action
-            self.movePacMan(new_pos_pacMan)#do extra action
             if(self.pill_duration <= 0):
                 self.pill_active = False
 
         if(self.lives <= 0):
             self.play = False
             print("Out of lives")
-            return
+            self.reset()
         elif(self.food_count <= 0):
             self.play = False
             print("Eaten all food")
-            return
+            self.reset()
+
         
     def reset(self):
         self.grid = self.loadMaze()  # Reload maze
