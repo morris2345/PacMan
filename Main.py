@@ -12,6 +12,8 @@ def main():
         print("--------------------------------------------------")
         print(env.grid)
         print(env.pill_active)
+        env.render()
+        time.sleep(0.25)
 
     print(env.grid)
 

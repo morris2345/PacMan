@@ -18,9 +18,9 @@ class CustomPacManEnv(gym.Env):
         self.ghosts = [] #ghost positions
         self.pills = [] #pill positions
         self.pacman_pos = () #pacman position
-        self.pill_start_duration = 10000
-        self.pill_duration = 10000#amount of moves before pill goes unactive
-        self.pill_active = True
+        self.pill_start_duration = 100
+        self.pill_duration = 100#amount of moves before pill goes unactive
+        self.pill_active = False
         self.algo = "random"
         self.lives = 1
         self.score = 0
@@ -197,10 +197,10 @@ class CustomPacManEnv(gym.Env):
         new_pos_pacMan = self.chooseActionPacMan()#choose action
 
         #ghosts actions
-        #for i in range(self.ghost_count):
-            #ghost_x, ghost_y = self.ghosts[i]
-            #new_pos = self.ghostSemiRandomMove((ghost_x, ghost_y), 0.7)
-            #self.ghosts[i] = (new_pos[0], new_pos[1])
+        for i in range(self.ghost_count):
+            ghost_x, ghost_y = self.ghosts[i]
+            new_pos = self.ghostSemiRandomMove((ghost_x, ghost_y), 0.7)
+            self.ghosts[i] = (new_pos[0], new_pos[1])
 
         #move PacMan
         self.movePacMan(new_pos_pacMan)
@@ -219,3 +219,38 @@ class CustomPacManEnv(gym.Env):
             self.play = False
             print("Eaten all food")
             return
+        
+    def reset(self):
+        self.grid = self.loadMaze()  # Reload maze
+        self.fillMaze()  # Fill maze again with Pills, Ghosts & Food
+        self.food_count = np.count_nonzero(self.grid == 4)  # Amount of food
+        self.lives = 1  # Reset lives
+        self.score = 0  # Reset score
+        return self.pacman_pos
+        
+    def render(self):
+        cell_size = 40
+        screen = pygame.display.set_mode((self.grid.shape[1] * cell_size, self.grid.shape[0] * cell_size))
+        screen.fill((0, 0, 0))
+
+        # Draw the Maze
+        for x in range(self.grid.shape[0]):
+            for y in range(self.grid.shape[1]):
+                if self.grid[x, y] == 1:  # Wall
+                    pygame.draw.rect(screen, (0, 0, 255), (y * cell_size, x * cell_size, cell_size, cell_size))
+                else:  # Empty space (Paths)
+                    pygame.draw.rect(screen, (0, 0, 0), (y * cell_size, x * cell_size, cell_size, cell_size))
+
+        # Pac-Man
+        pac_x, pac_y = self.pacman_pos
+        pygame.draw.circle(screen, (255, 255, 0), (pac_y * cell_size + cell_size / 2, pac_x * cell_size + cell_size / 2), cell_size / 2)
+
+        # Ghosts
+        for ghost_x, ghost_y in self.ghosts:
+            pygame.draw.polygon(screen, (255, 0, 0), [
+                (ghost_y * cell_size, ghost_x * cell_size + cell_size),  # Bottom-left
+                (ghost_y * cell_size + cell_size, ghost_x * cell_size + cell_size),  # Bottom-right
+                (ghost_y * cell_size + cell_size / 2, ghost_x * cell_size)  # Top-center
+            ])
+
+        pygame.display.flip()
