@@ -222,11 +222,19 @@ class CustomPacManEnv(gym.Env):
         
     def reset(self):
         self.grid = self.loadMaze()  # Reload maze
-        self.fillMaze()  # Fill maze again with Pills, Ghosts & Food
-        self.food_count = np.count_nonzero(self.grid == 4)  # Amount of food
         self.lives = 1  # Reset lives
         self.score = 0  # Reset score
-        return self.pacman_pos
+        self.play = True
+        self.pill_count = 4 #amount of pills in the maze
+        self.ghost_count = 4 #amount of ghosts in the maze
+        self.ghosts = [] #ghost positions
+        self.pills = [] #pill positions
+        self.pacman_pos = () #pacman position
+        self.pill_duration = 0 #amount of moves before pill goes unactive
+        self.pill_active = False
+        self.fillMaze()  # Fill maze again with Pills, Ghosts, Food & PacMan
+        self.food_count = np.count_nonzero(self.grid == 4)  # Amount of food
+        #return self.pacman_pos
         
     def render(self):
         cell_size = 40
