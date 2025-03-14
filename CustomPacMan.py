@@ -95,7 +95,7 @@ class CustomPacManEnv(gym.Env):
             self.grid[x, y] = 4 #Add Food (4) to grid
             self.food.append((x,y))
 
-    def movePacMan(self, new_pos):
+    def movePacMan(self, current_PacMan_pos, new_pos, old_ghost_positions):
         reward = 0
         if(self.grid[new_pos] == 4):#moved to food
             self.food_count -= 1
@@ -110,9 +110,7 @@ class CustomPacManEnv(gym.Env):
 
         #check ghost interactions
         for i in range(self.ghost_count):
-            ghost_x, ghost_y = self.ghosts[i]
-            pac_x, pac_y = new_pos
-            if ((int(ghost_x), int(ghost_y)) == (int(pac_x), int(pac_y))):
+            if ((self.ghosts[i] == new_pos) or (new_pos == old_ghost_positions[i] and current_PacMan_pos == self.ghosts[i])):
                 if(self.pill_active == True):
                     self.respawnGhost(i)
                     self.score += self.eat_ghost_reward
@@ -269,6 +267,12 @@ class CustomPacManEnv(gym.Env):
         #pacman action
         new_pos_pacMan, action = self.chooseActionPacMan(use_greedy_strategy)#choose action
 
+        #old ghosts positions
+        old_ghost_positions = []
+        for i in range(self.ghost_count):
+            ghost_x, ghost_y = self.ghosts[i]
+            old_ghost_positions.append((ghost_x, ghost_y))
+
         #ghosts actions
         for i in range(self.ghost_count):
             ghost_x, ghost_y = self.ghosts[i]
@@ -276,7 +280,7 @@ class CustomPacManEnv(gym.Env):
             self.ghosts[i] = (new_pos[0], new_pos[1])
 
         #move PacMan & store reward
-        reward = self.movePacMan(new_pos_pacMan)
+        reward = self.movePacMan(current_PacMan_pos, new_pos_pacMan, old_ghost_positions)
 
         self.updateQTable(state=current_PacMan_pos, action=action, reward=reward, next_state=self.pacman_pos)
 
@@ -287,7 +291,7 @@ class CustomPacManEnv(gym.Env):
             new_pos_pacMan, action = self.chooseActionPacMan(use_greedy_strategy)#choose extra action
 
             #move PacMan & store reward
-            reward = self.movePacMan(new_pos_pacMan)#do extra action
+            reward = self.movePacMan(current_PacMan_pos, new_pos_pacMan, old_ghost_positions)#do extra action
 
             self.updateQTable(state=current_PacMan_pos, action=action, reward=reward, next_state=self.pacman_pos)
 
