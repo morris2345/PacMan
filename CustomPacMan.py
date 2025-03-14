@@ -16,7 +16,8 @@ class CustomPacManEnv(gym.Env):
         self.pill_count = 4 #amount of pills in the maze
         self.ghost_count = 4 #amount of ghosts in the maze
         self.ghosts = [] #ghost positions
-        self.pills = [] #pill positions
+        self.pills = [] # Pill positions
+        self.food = [] # food positions
         self.pacman_pos = () #pacman position
         self.pill_start_duration = 100
         self.pill_duration = 0 #amount of moves before pill goes unactive
@@ -49,7 +50,8 @@ class CustomPacManEnv(gym.Env):
         self.alpha = 0.1 # Learning rate
         self.gamma = 0.9 # Discount factor
         self.epsilon = 0.1 # Exploration rate
-        self.q_table = np.zeros((self.grid.shape[0], self.grid.shape[1], 4)) #QTable. 4 = up,down,right,left
+        self.q_table = {}  # Dictionary to store Q-values
+
 
 
     #Load the maze file containing walls & empty spaces
@@ -92,6 +94,7 @@ class CustomPacManEnv(gym.Env):
         #Place food in left empty spaces
         for x, y in empty_cells:
             self.grid[x, y] = 4 #Add Food (4) to grid
+            self.food.append((x,y))
 
     def movePacMan(self, new_pos):
         reward = 0
@@ -145,6 +148,7 @@ class CustomPacManEnv(gym.Env):
 
     def QLearningAction(self, use_greedy_strategy):
         x, y = self.pacman_pos
+        state = self.get_state()
 
         if not use_greedy_strategy:
             #explore
@@ -165,7 +169,7 @@ class CustomPacManEnv(gym.Env):
             if self.grid[next_x, next_y] != 1:  # Not a wall
                 valid_moves.append((action, (next_x, next_y)))
 
-        best_action, next_pos = max(valid_moves, key=lambda move: self.q_table[x, y, move[0]])#check Q-value for every move in valid_moves. move[0] is the action
+        best_action, next_pos = max(valid_moves, key=lambda move: self.q_table.get((state, move[0]), 0))#check Q-value for every move in valid_moves. get max q-value (state, move[0]) where move[0] is the action and 0 is default value if not in dictionary yet.
         return next_pos, self.action_to_direction(best_action)
 
     def action_to_direction(self, action):
@@ -179,13 +183,20 @@ class CustomPacManEnv(gym.Env):
             return (0, 1)
         
     def updateQTable(self, state, action, reward, next_state):
-        x,y = state
-        nx, ny = next_state
-
-        q_current = self.q_table[x, y, action]
-        q_next_max = np.max(self.q_table[nx, ny])
+        q_current = self.q_table.get((state, action), 0) # Get current Q-value. 0 as default value if not in dictionary yet
+        q_next_max = max(self.q_table.get((next_state, a), 0) for a in range(4)) # Max Q-value of next state
         q_update = reward + self.gamma * q_next_max
-        self.q_table[x, y, action] += self.alpha * (q_update - q_current)
+        self.q_table[(state, action)] = q_current + self.alpha * (q_update - q_current) # Update q-table
+
+    def get_state(self):
+        x, y = self.pacman_pos
+        ghost_positions = tuple(ghostPos for ghostPos in self.ghosts) # Store all ghost positions
+        food_positions = tuple(foodPos for foodPos in self.food)
+        pill_positions = tuple(pillPos for pillPos in self.pills)
+        pill_status = int(self.pill_active) # 1 if active, 0 otherwise
+        pill_timer = self.pill_duration if self.pill_active else 0
+
+        return (x, y) + ghost_positions + pill_positions + food_positions + (pill_status, pill_timer)
 
     def bfsPathFinding(self, ghost_pos):
         queue = deque([(ghost_pos, [])]) #create dubble ended queue with current pos and path
