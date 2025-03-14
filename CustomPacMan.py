@@ -99,12 +99,14 @@ class CustomPacManEnv(gym.Env):
         reward = 0
         if(self.grid[new_pos] == 4):#moved to food
             self.food_count -= 1
+            self.food.remove((new_pos))
             self.score += self.food_reward
             reward = self.food_reward
         elif(self.grid[new_pos] == 2):#moved to pill
             self.pill_active = True
             self.pill_duration = self.pill_start_duration
             self.pill_count -= 1
+            self.pills.remove(new_pos)
             self.score += self.pickup_pill_reward
             reward = self.pickup_pill_reward
 
@@ -318,6 +320,7 @@ class CustomPacManEnv(gym.Env):
         self.ghost_count = 4 #amount of ghosts in the maze
         self.ghosts = [] #ghost positions
         self.pills = [] #pill positions
+        self.food = [] # food positions
         self.pacman_pos = () #pacman position
         self.pill_duration = 0 #amount of moves before pill goes unactive
         self.pill_active = False
