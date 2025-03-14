@@ -332,6 +332,10 @@ class CustomPacManEnv(gym.Env):
             for y in range(self.grid.shape[1]):
                 if self.grid[x, y] == 1:  # Wall
                     pygame.draw.rect(screen, (0, 0, 255), (y * cell_size, x * cell_size, cell_size, cell_size))
+                elif self.grid[x, y] == 2: #Pill
+                    pygame.draw.ellipse(screen, (0, 255, 0), (y * cell_size + cell_size/4, x * cell_size +cell_size/4, cell_size/2, cell_size/2))
+                elif self.grid[x, y] == 4: #food
+                    pygame.draw.ellipse(screen, (0, 255, 255), (y * cell_size + cell_size/4, x * cell_size +cell_size/4, cell_size/2, cell_size/2))
                 else:  # Empty space (Paths)
                     pygame.draw.rect(screen, (0, 0, 0), (y * cell_size, x * cell_size, cell_size, cell_size))
 
