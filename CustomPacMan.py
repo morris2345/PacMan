@@ -29,7 +29,7 @@ class CustomPacManEnv(gym.Env):
         self.food_reward = 100
         self.eat_ghost_reward = 200
         self.pickup_pill_reward = 200
-        self.lose_live_reward = -100
+        self.lose_live_reward = -1000
         self.step_reward = -50
 
         # Define available maze files
@@ -193,12 +193,32 @@ class CustomPacManEnv(gym.Env):
     def get_state(self):
         x, y = self.pacman_pos
         #ghost_positions = tuple(ghostPos for ghostPos in self.ghosts) # Store all ghost positions
+        ghost_distances = []
+        for i in range(self.ghost_count):
+            ghost_x, ghost_y = self.ghosts[i]
+            ghost_distances.append(abs(x-ghost_x) + abs(y-ghost_y))
         #food_positions = tuple(foodPos for foodPos in self.food)
+        food_in_directions = []# is there food in a direction next to pacman
+        for (direction_x, direction_y) in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+            next_x, next_y = x + direction_x, y + direction_y
+            if self.grid[next_x, next_y] == 4:
+                food_in_directions.append(1)
+            else:
+                food_in_directions.append(0)
+        
+        pill_in_directions = []# is there a pill in a direction next to pacman
+        for (direction_x, direction_y) in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+            next_x, next_y = x + direction_x, y + direction_y
+            if self.grid[next_x, next_y] == 2:
+                pill_in_directions.append(1)
+            else:
+                pill_in_directions.append(0)
+
         #pill_positions = tuple(pillPos for pillPos in self.pills)
         pill_status = int(self.pill_active) # 1 if active, 0 otherwise
-        pill_timer = self.pill_duration if self.pill_active else 0
+        #pill_timer = self.pill_duration if self.pill_active else 0
 
-        return (x, y) + (pill_status, pill_timer)
+        return (x, y) + (tuple(ghost_distances), tuple(food_in_directions), tuple(pill_in_directions), pill_status)
 
     def bfsPathFinding(self, ghost_pos):
         queue = deque([(ghost_pos, [])]) #create dubble ended queue with current pos and path

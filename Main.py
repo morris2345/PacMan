@@ -6,9 +6,9 @@ import pickle
 def main():
     env = CustomPacManEnv(maze_size="normal")
 
-    load_q_table(env, "test1")
+    load_q_table(env, "test5")
     #print(env.grid)
-    for i in range(1000):
+    for i in range(100):
         env.play = True
         while(env.play == True):
             env.step(use_greedy_strategy=False)
@@ -34,7 +34,7 @@ def main():
                 time.sleep(0.25)
     #print(env.grid)
 
-    save_q_table(env, "test1")
+    save_q_table(env, "test5")
 
     env.close
 
