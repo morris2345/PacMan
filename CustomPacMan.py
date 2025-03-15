@@ -13,8 +13,9 @@ class CustomPacManEnv(gym.Env):
         super().__init__()
 
         self.play = True
+        self.start_pill_count = 4 #amount of pills i nthe maze at the start of the game
         self.pill_count = 4 #amount of pills in the maze
-        self.ghost_count = 4 #amount of ghosts in the maze
+        self.ghost_count = 1 #amount of ghosts in the maze
         self.ghosts = [] #ghost positions
         self.pills = [] # Pill positions
         self.food = [] # food positions
@@ -27,8 +28,9 @@ class CustomPacManEnv(gym.Env):
         self.score = 0
         self.food_reward = 100
         self.eat_ghost_reward = 200
-        self.pickup_pill_reward = 50
-        self.lose_live_reward = -1000
+        self.pickup_pill_reward = 200
+        self.lose_live_reward = -100
+        self.step_reward = -50
 
         # Define available maze files
         self.maze_files = {
@@ -49,7 +51,7 @@ class CustomPacManEnv(gym.Env):
         #Q-Learning Parameters
         self.alpha = 0.1 # Learning rate
         self.gamma = 0.9 # Discount factor
-        self.epsilon = 0.1 # Exploration rate
+        self.epsilon = 0.7 # Exploration rate
         self.q_table = {}  # Dictionary to store Q-values
 
 
@@ -97,6 +99,7 @@ class CustomPacManEnv(gym.Env):
 
     def movePacMan(self, current_PacMan_pos, new_pos, old_ghost_positions):
         reward = 0
+        reward += self.step_reward
         if(self.grid[new_pos] == 4):#moved to food
             self.food_count -= 1
             self.food.remove((new_pos))
@@ -169,7 +172,7 @@ class CustomPacManEnv(gym.Env):
                 valid_moves.append((action, (next_x, next_y)))
 
         best_action, next_pos = max(valid_moves, key=lambda move: self.q_table.get((state, move[0]), 0))#check Q-value for every move in valid_moves. get max q-value (state, move[0]) where move[0] is the action and 0 is default value if not in dictionary yet.
-        return next_pos, self.action_to_direction(best_action)
+        return next_pos, best_action
 
     def action_to_direction(self, action):
         if action == 0:  # UP
@@ -189,13 +192,13 @@ class CustomPacManEnv(gym.Env):
 
     def get_state(self):
         x, y = self.pacman_pos
-        ghost_positions = tuple(ghostPos for ghostPos in self.ghosts) # Store all ghost positions
-        food_positions = tuple(foodPos for foodPos in self.food)
-        pill_positions = tuple(pillPos for pillPos in self.pills)
+        #ghost_positions = tuple(ghostPos for ghostPos in self.ghosts) # Store all ghost positions
+        #food_positions = tuple(foodPos for foodPos in self.food)
+        #pill_positions = tuple(pillPos for pillPos in self.pills)
         pill_status = int(self.pill_active) # 1 if active, 0 otherwise
         pill_timer = self.pill_duration if self.pill_active else 0
 
-        return (x, y) + ghost_positions + pill_positions + food_positions + (pill_status, pill_timer)
+        return (x, y) + (pill_status, pill_timer)
 
     def bfsPathFinding(self, ghost_pos):
         queue = deque([(ghost_pos, [])]) #create dubble ended queue with current pos and path
@@ -206,7 +209,7 @@ class CustomPacManEnv(gym.Env):
 
             #check if on pacman, return first step of path
             if(x, y) == self.pacman_pos:
-                return path[0]
+                return path[0] if path else ghost_pos
             
             for direction_x, direction_y in [(-1, 0), (1, 0), (0, -1), (0, 1)]:  #up, down, left, right
                 next_x, next_y = x + direction_x, y + direction_y
@@ -214,6 +217,8 @@ class CustomPacManEnv(gym.Env):
                 if(next_x, next_y) not in visited and self.grid[next_x,next_y] != 1: #not visited & not wall
                     queue.append(((next_x, next_y), path + [(next_x, next_y)]))
                     visited.add((next_x,next_y))
+
+        return ghost_pos
 
 
     def ghostSemiRandomMove(self, ghost_pos, chase_prob):
@@ -225,7 +230,8 @@ class CustomPacManEnv(gym.Env):
 
             bfs_location = self.bfsPathFinding(ghost_pos) #Returns the best location to move to when going towards PacMan
             bfs_move = (bfs_location[0] - x, bfs_location[1] - y) #Returns the best move (up, down, left, right) when going towards PacMan
-            moves.remove(bfs_move) #Remove best move for going towards PacMan, because ghost is running away
+            if bfs_move in moves:
+                moves.remove(bfs_move) #Remove best move for going towards PacMan, because ghost is running away
 
             for direction_x, direction_y in moves:
                 next_x, next_y = x + direction_x, y + direction_y
@@ -265,6 +271,7 @@ class CustomPacManEnv(gym.Env):
         
         #store current PacMan Position
         current_PacMan_pos = self.pacman_pos
+        state = self.get_state()
 
         #pacman action
         new_pos_pacMan, action = self.chooseActionPacMan(use_greedy_strategy)#choose action
@@ -284,18 +291,19 @@ class CustomPacManEnv(gym.Env):
         #move PacMan & store reward
         reward = self.movePacMan(current_PacMan_pos, new_pos_pacMan, old_ghost_positions)
 
-        self.updateQTable(state=current_PacMan_pos, action=action, reward=reward, next_state=self.pacman_pos)
+        self.updateQTable(state = state, action=action, reward=reward, next_state=self.get_state())
 
         if(self.pill_active):
             #store current PacMan Position
             current_PacMan_pos = self.pacman_pos
+            state = self.get_state()
 
             new_pos_pacMan, action = self.chooseActionPacMan(use_greedy_strategy)#choose extra action
 
             #move PacMan & store reward
             reward = self.movePacMan(current_PacMan_pos, new_pos_pacMan, old_ghost_positions)#do extra action
 
-            self.updateQTable(state=current_PacMan_pos, action=action, reward=reward, next_state=self.pacman_pos)
+            self.updateQTable(state = state, action=action, reward=reward, next_state=self.get_state())
 
             self.pill_duration -= 1
             if(self.pill_duration <= 0):
@@ -315,9 +323,9 @@ class CustomPacManEnv(gym.Env):
         self.grid = self.loadMaze()  # Reload maze
         self.lives = 1  # Reset lives
         self.score = 0  # Reset score
-        self.play = True
-        self.pill_count = 4 #amount of pills in the maze
-        self.ghost_count = 4 #amount of ghosts in the maze
+        #self.play = True
+        self.pill_count = self.start_pill_count #amount of pills in the maze
+        #self.ghost_count = 4 #amount of ghosts in the maze
         self.ghosts = [] #ghost positions
         self.pills = [] #pill positions
         self.food = [] # food positions
