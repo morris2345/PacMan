@@ -9,7 +9,7 @@ import pygame
 class CustomPacManEnv(gym.Env):
     metadata = {"render_modes": ["human"], "render_fps": 10}
 
-    def __init__(self, maze_size="normal"):
+    def __init__(self, maze_size="normal", algo="QL"):
         super().__init__()
 
         self.play = True
@@ -23,14 +23,19 @@ class CustomPacManEnv(gym.Env):
         self.pill_start_duration = 100
         self.pill_duration = 0 #amount of moves before pill goes unactive
         self.pill_active = False
-        self.algo = "QL"
+        self.algo = algo
+        self.version = "Normal" #Normal/Vegan/Ghost Hunter/Speedrun
         self.lives = 1
         self.score = 0
+
+        #change rewards based on version
         self.food_reward = 100
         self.eat_ghost_reward = 200
         self.pickup_pill_reward = 200
         self.lose_live_reward = -1000
         self.step_reward = -50
+
+        self.rm_state = 0 #reward machine state
 
         # Define available maze files
         self.maze_files = {
@@ -113,6 +118,8 @@ class CustomPacManEnv(gym.Env):
             self.score += self.pickup_pill_reward
             reward = self.pickup_pill_reward
 
+        self.updateRMState() #update the reward machine state
+
         #check ghost interactions
         for i in range(self.ghost_count):
             if ((self.ghosts[i] == new_pos) or (new_pos == old_ghost_positions[i] and current_PacMan_pos == self.ghosts[i])):
@@ -146,7 +153,8 @@ class CustomPacManEnv(gym.Env):
             new_pos, action = self.QLearningAction(use_greedy_strategy)
             return new_pos, action
         elif(self.algo == "QRM"):
-            return
+            new_pos, action = self.QRMAction(use_greedy_strategy)
+            return new_pos, action
 
     def QLearningAction(self, use_greedy_strategy):
         x, y = self.pacman_pos
@@ -218,7 +226,62 @@ class CustomPacManEnv(gym.Env):
         pill_status = int(self.pill_active) # 1 if active, 0 otherwise
         #pill_timer = self.pill_duration if self.pill_active else 0
 
-        return (x, y) + (tuple(ghost_distances), tuple(food_in_directions), tuple(pill_in_directions), pill_status)
+        state = (x, y) + (tuple(ghost_distances), tuple(food_in_directions), tuple(pill_in_directions), pill_status) # State of environment
+
+        return (state, self.rm_state) # Return state + Reward Machine State. (RM State will always be 0 for normal QLearning)
+    
+    #updates state and rewards
+    def updateRMState(self):
+        if(self.algo == "QRM"):
+            if self.rm_state == 0 and self.pill_active:
+                self.rm_state = 1  #Transition to "Pill Active Mode"
+                if(self.version == "Normal"):
+                    self.food_reward = 100
+                    self.eat_ghost_reward = 200
+                    self.pickup_pill_reward = -50 #picking up pill when already active is bad
+                    self.lose_live_reward = -1000
+                    self.step_reward = -50
+
+            elif self.rm_state == 1 and not self.pill_active:
+                self.rm_state = 0  #Transition back to normal
+                if(self.version == "Normal"):
+                    self.food_reward = 100
+                    self.eat_ghost_reward = 200
+                    self.pickup_pill_reward = 200
+                    self.lose_live_reward = -1000
+                    self.step_reward = -50
+
+            #elif self.rm_state == 2
+            #maybe a state where pill almost runs out. here can be good to pickup new pill or run from ghosts if agent can't catch them in time.
+            # 
+            # 
+    
+    #choose QRM action
+    def QRMAction(self, use_greedy_strategy):
+        x, y = self.pacman_pos
+        state = self.getState()
+
+        if not use_greedy_strategy:
+            #explore
+            if random.random() < self.epsilon:
+                valid_moves = []
+                for action, (direction_x, direction_y) in enumerate([(-1, 0), (1, 0), (0, -1), (0, 1)]):
+                    next_x, next_y = x + direction_x, y + direction_y
+                    if self.grid[next_x, next_y] != 1:  # Not a wall
+                        valid_moves.append((action, (next_x, next_y)))
+
+                chosen_action, next_pos = random.choice(valid_moves)
+                return next_pos, self.actionToDirection(chosen_action)
+            
+        #exploit    
+        valid_moves = []
+        for action, (direction_x, direction_y) in enumerate([(-1, 0), (1, 0), (0, -1), (0, 1)]):
+            next_x, next_y = x + direction_x, y + direction_y
+            if self.grid[next_x, next_y] != 1:  # Not a wall
+                valid_moves.append((action, (next_x, next_y)))
+
+        best_action, next_pos = max(valid_moves, key=lambda move: self.q_table.get((state, move[0]), 0))#check Q-value for every move in valid_moves. get max q-value (state, move[0]) where move[0] is the action and 0 is default value if not in dictionary yet.
+        return next_pos, best_action
 
     def bfsPathFinding(self, ghost_pos):
         queue = deque([(ghost_pos, [])]) #create dubble ended queue with current pos and path
@@ -289,6 +352,8 @@ class CustomPacManEnv(gym.Env):
 
     def step(self, use_greedy_strategy):
         
+        self.updateRMState() #update the reward machine state
+
         #store current PacMan Position
         current_PacMan_pos = self.pacman_pos
         state = self.getState()
@@ -328,10 +393,11 @@ class CustomPacManEnv(gym.Env):
             self.pill_duration -= 1
             if(self.pill_duration <= 0):
                 self.pill_active = False
+            self.updateRMState() #update the reward machine state
 
         if(self.lives <= 0):
             self.play = False
-            print("Out of lives")
+            #print("Out of lives")
             self.reset()
         elif(self.food_count <= 0):
             self.play = False
@@ -354,6 +420,7 @@ class CustomPacManEnv(gym.Env):
         self.pill_active = False
         self.fillMaze()  # Fill maze again with Pills, Ghosts, Food & PacMan
         self.food_count = np.count_nonzero(self.grid == 4)  # Amount of food
+        self.updateRMState()
         #return self.pacman_pos
         
     def render(self):
