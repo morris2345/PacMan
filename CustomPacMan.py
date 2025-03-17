@@ -150,7 +150,7 @@ class CustomPacManEnv(gym.Env):
 
     def QLearningAction(self, use_greedy_strategy):
         x, y = self.pacman_pos
-        state = self.get_state()
+        state = self.getState()
 
         if not use_greedy_strategy:
             #explore
@@ -162,7 +162,7 @@ class CustomPacManEnv(gym.Env):
                         valid_moves.append((action, (next_x, next_y)))
 
                 chosen_action, next_pos = random.choice(valid_moves)
-                return next_pos, self.action_to_direction(chosen_action)
+                return next_pos, self.actionToDirection(chosen_action)
             
         #exploit    
         valid_moves = []
@@ -174,7 +174,7 @@ class CustomPacManEnv(gym.Env):
         best_action, next_pos = max(valid_moves, key=lambda move: self.q_table.get((state, move[0]), 0))#check Q-value for every move in valid_moves. get max q-value (state, move[0]) where move[0] is the action and 0 is default value if not in dictionary yet.
         return next_pos, best_action
 
-    def action_to_direction(self, action):
+    def actionToDirection(self, action):
         if action == 0:  # UP
             return (-1, 0)
         elif action == 1:  # DOWN
@@ -190,7 +190,7 @@ class CustomPacManEnv(gym.Env):
         q_update = reward + self.gamma * q_next_max
         self.q_table[(state, action)] = q_current + self.alpha * (q_update - q_current) # Update q-table
 
-    def get_state(self):
+    def getState(self):
         x, y = self.pacman_pos
         #ghost_positions = tuple(ghostPos for ghostPos in self.ghosts) # Store all ghost positions
         ghost_distances = []
@@ -291,7 +291,7 @@ class CustomPacManEnv(gym.Env):
         
         #store current PacMan Position
         current_PacMan_pos = self.pacman_pos
-        state = self.get_state()
+        state = self.getState()
 
         #pacman action
         new_pos_pacMan, action = self.chooseActionPacMan(use_greedy_strategy)#choose action
@@ -311,19 +311,19 @@ class CustomPacManEnv(gym.Env):
         #move PacMan & store reward
         reward = self.movePacMan(current_PacMan_pos, new_pos_pacMan, old_ghost_positions)
 
-        self.updateQTable(state = state, action=action, reward=reward, next_state=self.get_state())
+        self.updateQTable(state = state, action=action, reward=reward, next_state=self.getState())
 
         if(self.pill_active):
             #store current PacMan Position
             current_PacMan_pos = self.pacman_pos
-            state = self.get_state()
+            state = self.getState()
 
             new_pos_pacMan, action = self.chooseActionPacMan(use_greedy_strategy)#choose extra action
 
             #move PacMan & store reward
             reward = self.movePacMan(current_PacMan_pos, new_pos_pacMan, old_ghost_positions)#do extra action
 
-            self.updateQTable(state = state, action=action, reward=reward, next_state=self.get_state())
+            self.updateQTable(state = state, action=action, reward=reward, next_state=self.getState())
 
             self.pill_duration -= 1
             if(self.pill_duration <= 0):
