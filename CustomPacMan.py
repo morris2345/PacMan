@@ -15,7 +15,7 @@ class CustomPacManEnv(gym.Env):
         self.play = True
         self.start_pill_count = 4 #amount of pills i nthe maze at the start of the game
         self.pill_count = 4 #amount of pills in the maze
-        self.ghost_count = 1 #amount of ghosts in the maze
+        self.ghost_count = 2 #amount of ghosts in the maze
         self.ghosts = [] #ghost positions
         self.pills = [] # Pill positions
         self.food = [] # food positions
@@ -30,7 +30,7 @@ class CustomPacManEnv(gym.Env):
 
         #change rewards based on version
         self.food_reward = 100
-        self.eat_ghost_reward = 200
+        self.eat_ghost_reward = 500
         self.pickup_pill_reward = 200
         self.lose_live_reward = -1000
         self.step_reward = -50
@@ -49,7 +49,6 @@ class CustomPacManEnv(gym.Env):
         self.fillMaze()#Fill maze with Pills, Ghosts & Food
 
         self.food_count = np.count_nonzero(self.grid == 4) #amount of food in the maze
-
         # Define action space (UP, DOWN, LEFT, RIGHT)
         self.action_space = spaces.Discrete(4)
 
@@ -199,6 +198,7 @@ class CustomPacManEnv(gym.Env):
         self.q_table[(state, action)] = q_current + self.alpha * (q_update - q_current) # Update q-table
 
     def getState(self):
+        """
         x, y = self.pacman_pos
         #ghost_positions = tuple(ghostPos for ghostPos in self.ghosts) # Store all ghost positions
         ghost_distances = []
@@ -229,6 +229,38 @@ class CustomPacManEnv(gym.Env):
         state = (x, y) + (tuple(ghost_distances), tuple(food_in_directions), tuple(pill_in_directions), pill_status) # State of environment
 
         return (state, self.rm_state) # Return state + Reward Machine State. (RM State will always be 0 for normal QLearning)
+        """
+        x, y = self.pacman_pos
+        ghost_directions = []
+        for i in range(self.ghost_count):
+            ghost_x, ghost_y = self.ghosts[i]
+            direction_x = ghost_x - x
+            direction_y = ghost_y - y
+            ghost_directions.append((direction_x > 0, direction_y > 0))
+            
+        food_in_directions = []# is there food in a direction next to pacman
+        for (direction_x, direction_y) in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+            next_x, next_y = x + direction_x, y + direction_y
+            if self.grid[next_x, next_y] == 4:
+                food_in_directions.append(1)
+            else:
+                food_in_directions.append(0)
+
+        pill_in_directions = []# is there a pill in a direction next to pacman
+        for (direction_x, direction_y) in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+            next_x, next_y = x + direction_x, y + direction_y
+            if self.grid[next_x, next_y] == 2:
+                pill_in_directions.append(1)
+            else:
+                pill_in_directions.append(0)
+        #food_positions = tuple(foodPos for foodPos in self.food)
+        #pill_positions = tuple(pillPos for pillPos in self.pills)
+        pill_status = int(self.pill_active) # 1 if active, 0 otherwise
+        #pill_timer = self.pill_duration if self.pill_active else 0
+
+        state = (x, y) + (tuple(ghost_directions), tuple(food_in_directions), tuple(pill_in_directions) , pill_status) # State of environment
+
+        return (state, self.rm_state) # Return state + Reward Machine State. (RM State will always be 0 for normal QLearning)
     
     #updates state and rewards
     def updateRMState(self):
@@ -237,8 +269,8 @@ class CustomPacManEnv(gym.Env):
                 self.rm_state = 1  #Transition to "Pill Active Mode"
                 if(self.version == "Normal"):
                     self.food_reward = 100
-                    self.eat_ghost_reward = 200
-                    self.pickup_pill_reward = -50 #picking up pill when already active is bad
+                    self.eat_ghost_reward = 500
+                    self.pickup_pill_reward = -200 #picking up pill when already active is bad
                     self.lose_live_reward = -1000
                     self.step_reward = -50
 
@@ -246,7 +278,7 @@ class CustomPacManEnv(gym.Env):
                 self.rm_state = 0  #Transition back to normal
                 if(self.version == "Normal"):
                     self.food_reward = 100
-                    self.eat_ghost_reward = 200
+                    self.eat_ghost_reward = 500
                     self.pickup_pill_reward = 200
                     self.lose_live_reward = -1000
                     self.step_reward = -50
@@ -401,7 +433,7 @@ class CustomPacManEnv(gym.Env):
             self.reset()
         elif(self.food_count <= 0):
             self.play = False
-            print("Eaten all food")
+            #print("Eaten all food")
             self.reset()
 
         

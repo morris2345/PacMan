@@ -4,15 +4,15 @@ import time
 import pickle
 
 def main():
-    env = CustomPacManEnv(maze_size="normal", algo="QRM")
+    env = CustomPacManEnv(maze_size="small", algo="QRM")
 
-    load_q_table(env, "qrm1.pkl")
+    load_q_table(env, "small-qrm1.pkl")
     #print(env.grid)
-    for i in range(100):
+    for i in range(0):
         env.play = True
         while(env.play == True):
             env.step(use_greedy_strategy=False)
-            if(i % 3000 == 0):
+            if(i % 10000 == 0):
                 print(i)
                 #env.render()
                 #time.sleep(0.25)
@@ -23,18 +23,18 @@ def main():
         #env.render()
         #time.sleep(0.25)
 
-    for i in range(1):
-            env.play = True
-            while(env.play == True):
-                env.step(use_greedy_strategy=True)
-            #print("--------------------------------------------------")
-            #print(env.grid)
-            #print(env.pill_active)
-                env.render()
-                time.sleep(0.25)
+    for i in range(5):
+        env.play = True
+        while(env.play == True):
+            env.step(use_greedy_strategy=True)
+        #print("--------------------------------------------------")
+        #print(env.grid)
+        #print(env.pill_active)
+            env.render()
+            time.sleep(0.25)
     #print(env.grid)
 
-    save_q_table(env, "qrm1.pkl")
+    #save_q_table(env, "small-qrm1.pkl")
 
     env.close
 
