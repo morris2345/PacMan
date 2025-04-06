@@ -13,6 +13,7 @@ class CustomPacManEnv(gym.Env):
         super().__init__()
 
         self.play = True
+        self.won = 0 #game won or not (1=won, 0=lost)
         self.start_pill_count = 2 #amount of pills i nthe maze at the start of the game
         self.pill_count = 2 #amount of pills in the maze
         self.ghost_count = 2 #amount of ghosts in the maze
@@ -34,7 +35,7 @@ class CustomPacManEnv(gym.Env):
         self.eat_ghost_reward = 500
         self.pickup_pill_reward = 200
         self.lose_live_reward = -1000
-        self.step_reward = -50
+        self.step_reward = -5
         self.win_reward = 1000
 
         self.rm_state = 0 #reward machine state
@@ -55,9 +56,9 @@ class CustomPacManEnv(gym.Env):
         #self.action_space = spaces.Discrete(4)
 
         #Q-Learning Parameters
-        self.alpha = 0.1 # Learning rate
-        self.gamma = 0.9 # Discount factor
-        self.epsilon = 0.7 # Exploration rate
+        self.alpha = 0.05 # Learning rate
+        self.gamma = 0.99 # Discount factor
+        self.epsilon = 1.0 # Exploration rate
         self.q_table = {}  # Dictionary to store Q-values
 
 
@@ -121,16 +122,17 @@ class CustomPacManEnv(gym.Env):
         if(self.grid[new_pos] == 4):#moved to food
             self.food_count -= 1
             self.food.remove((new_pos))
-            self.score += self.food_reward
+            self.score += 100
             reward = self.food_reward
             if(len(self.food) <= 0): #If all food eaten get win reward
                 reward += self.win_reward
+                self.score += 1000
         elif(self.grid[new_pos] == 2):#moved to pill
             self.pill_active = True
             self.pill_duration = self.pill_start_duration
             self.pill_count -= 1
             self.pills.remove(new_pos)
-            self.score += self.pickup_pill_reward
+            self.score += 200
             reward = self.pickup_pill_reward
 
         self.updateRMState() #update the reward machine state
@@ -140,7 +142,7 @@ class CustomPacManEnv(gym.Env):
             if ((self.ghosts[i] == new_pos) or (new_pos == old_ghost_positions[i] and current_PacMan_pos == self.ghosts[i])):
                 if(self.pill_active == True):
                     self.respawnGhost(i)
-                    self.score += self.eat_ghost_reward
+                    self.score += 500
                     reward += self.eat_ghost_reward
                 elif(self.food_count > 0 and self.pill_active == False):
                     self.lives -= 1
@@ -257,9 +259,18 @@ class CustomPacManEnv(gym.Env):
             direction_y = ghost_y - y
             ghost_directions.append((direction_x > 0, direction_y > 0))"
         """
-        ghost_positions = tuple(ghostPos for ghostPos in self.ghosts) # Store all ghost positions
+        #ghost_positions = tuple(ghostPos for ghostPos in self.ghosts) # Store all ghost positions
+        ghost_in_directions = []# is there a ghost in a direction next to pacman
+        for (direction_x, direction_y) in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+            next_x, next_y = x + direction_x, y + direction_y
+            if self.grid[next_x, next_y] == 4:
+                ghost_in_directions.append(1)
+            else:
+                ghost_in_directions.append(0)
+
         food_positions = tuple(foodPos for foodPos in self.food)
           
+        """
         food_in_directions = []# is there food in a direction next to pacman
         for (direction_x, direction_y) in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
             next_x, next_y = x + direction_x, y + direction_y
@@ -267,8 +278,8 @@ class CustomPacManEnv(gym.Env):
                 food_in_directions.append(1)
             else:
                 food_in_directions.append(0)
-        
-
+        """
+        """
         pill_in_directions = []# is there a pill in a direction next to pacman
         for (direction_x, direction_y) in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
             next_x, next_y = x + direction_x, y + direction_y
@@ -276,12 +287,13 @@ class CustomPacManEnv(gym.Env):
                 pill_in_directions.append(1)
             else:
                 pill_in_directions.append(0)
+        """
         #food_positions = tuple(foodPos for foodPos in self.food)
         pill_positions = tuple(pillPos for pillPos in self.pills)
         pill_status = int(self.pill_active) # 1 if active, 0 otherwise
         #pill_timer = self.pill_duration if self.pill_active else 0
 
-        state = (x, y) + (ghost_positions, food_positions , pill_positions , pill_status) # State of environment
+        state = (x, y) + (tuple(ghost_in_directions), food_positions , pill_positions , pill_status) # State of environment
 
         return (state, self.rm_state) # Return state + Reward Machine State. (RM State will always be 0 for normal QLearning)
     
@@ -295,7 +307,8 @@ class CustomPacManEnv(gym.Env):
                     self.eat_ghost_reward = 500
                     self.pickup_pill_reward = -200 #picking up pill when already active is bad
                     self.lose_live_reward = -1000
-                    self.step_reward = -50
+                    self.step_reward = -5
+                    self.win_reward = 1000
 
             elif self.rm_state == 1 and not self.pill_active:
                 self.rm_state = 0  #Transition back to normal
@@ -304,7 +317,8 @@ class CustomPacManEnv(gym.Env):
                     self.eat_ghost_reward = 500
                     self.pickup_pill_reward = 200
                     self.lose_live_reward = -1000
-                    self.step_reward = -50
+                    self.step_reward = -5
+                    self.win_reward = 1000
 
             #elif self.rm_state == 2
             #maybe a state where pill almost runs out. here can be good to pickup new pill or run from ghosts if agent can't catch them in time.
@@ -431,7 +445,9 @@ class CustomPacManEnv(gym.Env):
         #move PacMan & store reward
         reward = self.movePacMan(current_PacMan_pos, new_pos_pacMan, old_ghost_positions)
 
-        self.updateQTable(state = state, action=action, reward=reward, next_state=self.getState())
+        if(not use_greedy_strategy):#only update q_table if training
+           self.updateQTable(state = state, action=action, reward=reward, next_state=self.getState())
+        
 
         if(self.pill_active):
             #store current PacMan Position
@@ -443,7 +459,8 @@ class CustomPacManEnv(gym.Env):
             #move PacMan & store reward
             reward = self.movePacMan(current_PacMan_pos, new_pos_pacMan, old_ghost_positions)#do extra action
 
-            self.updateQTable(state = state, action=action, reward=reward, next_state=self.getState())
+            if(not use_greedy_strategy):#only update q_table if training
+                self.updateQTable(state = state, action=action, reward=reward, next_state=self.getState())
 
             self.pill_duration -= 1
             if(self.pill_duration <= 0):
@@ -452,12 +469,14 @@ class CustomPacManEnv(gym.Env):
 
         if(self.lives <= 0):
             self.play = False
+            self.won = 0
             #print("Out of lives")
-            self.reset()
+            #self.reset()
         elif(self.food_count <= 0):
             self.play = False
+            self.won = 1 #game won
             #print("Eaten all food")
-            self.reset()
+            #self.reset()
 
         
     def reset(self):
@@ -465,6 +484,7 @@ class CustomPacManEnv(gym.Env):
         self.lives = 1  # Reset lives
         self.score = 0  # Reset score
         #self.play = True
+        self.won = 0
         self.pill_count = self.start_pill_count #amount of pills in the maze
         #self.ghost_count = 4 #amount of ghosts in the maze
         self.ghosts = [] #ghost positions
