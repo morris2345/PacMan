@@ -21,7 +21,7 @@ class CustomPacManEnv(gym.Env):
         self.pills = [] # Pill positions
         self.food = [] # food positions
         self.pacman_pos = () #pacman position
-        self.pill_start_duration = 100
+        self.pill_start_duration = 50
         self.pill_duration = 0 #amount of moves before pill goes unactive
         self.pill_active = False
         self.algo = algo

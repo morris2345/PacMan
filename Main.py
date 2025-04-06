@@ -4,16 +4,17 @@ from CustomPacMan import CustomPacManEnv
 import time
 import pickle
 import numpy as np
+import random
 
 def main():
     env = CustomPacManEnv(maze_size="small", algo="QRM")
 
-    min_epsilon = 0.01
-    decay_rate = 1.05e-06 #2.2e-06
+    min_epsilon = 0.05 #0.01
+    decay_rate = 1.05e-06 #5.5e-07 #2.2e-06
 
-    number_of_training_games = 1000000
+    number_of_training_games = 2000000 #500000
     test_every_X_games = 10000
-    number_of_testing_games = 5000 #2500 #5000
+    number_of_testing_games = 1000 #2500 #5000
 
     q_table_size = []
     eps = []
@@ -39,21 +40,51 @@ def main():
         #env.epsilon = min_epsilon + (1.0 - min_epsilon) * np.exp(-decay_rate * i)
 
         env.play = True
-        if(i % 3 == 1):#start training episode with first pill already picked up
+
+        #remove random food to help learn states
+        num_food_to_remove = random.randint(0, env.food_count-1)#pick 0 to all but 1 food to remove
+        foods_to_remove = random.sample(env.food, num_food_to_remove)
+        for food_pos in foods_to_remove:
+            env.food.remove(food_pos)
+            env.grid[food_pos] = 0  # Clear food from grid
+            env.food_count -= 1
+
+        #start at meaning full points of game to help learning. for example start on pill 1 position
+        if(i % 4 == 1):#start training episode with first pill already picked up
             env.pill_active = True
             env.pill_duration = env.pill_start_duration
             env.pill_count -= 1
             pill_pos = env.pills[0]
             env.pills.remove(pill_pos)
             env.grid[pill_pos] = 0 #Clear field
+            env.pacman_pos = pill_pos
+            env.grid[pill_pos] = 5 # set to PacMan
 
-        if(i % 3 == 2):#start training episode with second pill already picked up
+        elif(i % 4 == 2):#start training episode with second pill already picked up
             env.pill_active = True
             env.pill_duration = env.pill_start_duration
             env.pill_count -= 1
             pill_pos = env.pills[1]
             env.pills.remove(pill_pos)
             env.grid[pill_pos] = 0 #Clear field
+            env.pacman_pos = pill_pos
+            env.grid[pill_pos] = 5 # set to PacMan
+
+        elif(i % 4 == 3):#start training episode with both pills already picked up
+            env.pill_active = True
+            env.pill_duration = env.pill_start_duration
+            env.pill_count -= 2
+            pill_pos1 = env.pills[0]
+            env.pills.remove(pill_pos1)
+            env.grid[pill_pos1] = 0 #Clear field
+            pill_pos2 = env.pills[0]
+            env.pills.remove(pill_pos2)
+            env.grid[pill_pos2] = 0 #Clear field
+
+            pill_pos = random.choice([pill_pos1, pill_pos2])#pick random pill position
+            env.pacman_pos = pill_pos #set pacmans position to pill position
+            env.grid[pill_pos] = 5 # set to PacMan
+
 
         while(env.play == True):
             env.step(use_greedy_strategy=False)
@@ -100,7 +131,7 @@ def main():
     plt.xlabel("Episode")
     plt.ylabel("q_table size")
     plt.title("Q-table size over training episodes (small map)")
-    plt.savefig("q-table-size-QRM-small-11.png", dpi=300, bbox_inches='tight')
+    plt.savefig("q-table-size-QRM-small-15.png", dpi=300, bbox_inches='tight')
     plt.show()
 
     plt.plot(eps, color = 'black', label='epsilon value')
@@ -108,7 +139,7 @@ def main():
     plt.xlabel("Episode")
     plt.ylabel("epsilon")
     plt.title("epsilon over training episodes (small map)")
-    plt.savefig("epsilon-QRM-small-11.png", dpi=300, bbox_inches='tight')
+    plt.savefig("epsilon-QRM-small-15.png", dpi=300, bbox_inches='tight')
     plt.show()
 
     window = 10000
@@ -118,7 +149,7 @@ def main():
     plt.xlabel("Episode")
     plt.ylabel("Score")
     plt.title("Score per training episode (small map)")
-    plt.savefig("training-scores-QRM-small-11.png", dpi=300, bbox_inches='tight')
+    plt.savefig("training-scores-QRM-small-15.png", dpi=300, bbox_inches='tight')
     plt.show()
 
     window = 10000
@@ -128,7 +159,7 @@ def main():
     plt.xlabel("Episode")
     plt.ylabel("Steps taken")
     plt.title("Steps taken per training episode (small map)")
-    plt.savefig("training-steps-QRM-small-11", dpi=300, bbox_inches='tight')
+    plt.savefig("training-steps-QRM-small-15", dpi=300, bbox_inches='tight')
     plt.show()
 
     window = 10000
@@ -138,7 +169,7 @@ def main():
     plt.xlabel("Episode")
     plt.ylabel("Winrate")
     plt.title("Winrate per training episode (small map)")
-    plt.savefig("training-win-QRM-small-11", dpi=300, bbox_inches='tight')
+    plt.savefig("training-win-QRM-small-15", dpi=300, bbox_inches='tight')
     plt.show()
 
     #-------------------------testing-------------------------#
@@ -153,7 +184,7 @@ def main():
     plt.xlabel("Episode")
     plt.ylabel("Average score")
     plt.title("Average test score every 10k training episodes (small map)")
-    plt.savefig("test-scores-QRM-small-11", dpi=300, bbox_inches='tight')
+    plt.savefig("test-scores-QRM-small-15", dpi=300, bbox_inches='tight')
     plt.show()
 
     #window = 5
@@ -165,7 +196,7 @@ def main():
     plt.xlabel("Episode")
     plt.ylabel("Average number of steps taken")
     plt.title("Average number of steps taken every 10k training episodes (small map)")
-    plt.savefig("test-steps-QRM-small-11", dpi=300, bbox_inches='tight')
+    plt.savefig("test-steps-QRM-small-15", dpi=300, bbox_inches='tight')
     plt.show()
 
     #window = 5
@@ -177,7 +208,7 @@ def main():
     plt.xlabel("Episode")
     plt.ylabel("Average Winrate")
     plt.title("Average winrate every 10k training episodes (small map)")
-    plt.savefig("test-win-QRM-small-11", dpi=300, bbox_inches='tight')
+    plt.savefig("test-win-QRM-small-15", dpi=300, bbox_inches='tight')
     plt.show()
 
     #---------see for your self--------------
