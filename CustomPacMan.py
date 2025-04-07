@@ -29,6 +29,7 @@ class CustomPacManEnv(gym.Env):
         self.lives = 1
         self.score = 0
         self.max_food = 4
+        self.ghosts_eaten = 0
 
         #change rewards based on version
         self.food_reward = 100
@@ -144,6 +145,7 @@ class CustomPacManEnv(gym.Env):
                     self.respawnGhost(i)
                     self.score += 500
                     reward += self.eat_ghost_reward
+                    self.ghosts_eaten += 1
                 elif(self.food_count > 0 and self.pill_active == False):
                     self.lives -= 1
                     reward += self.lose_live_reward
@@ -251,14 +253,16 @@ class CustomPacManEnv(gym.Env):
         return (state, self.rm_state) # Return state + Reward Machine State. (RM State will always be 0 for normal QLearning)
         """
         x, y = self.pacman_pos
-        """
+        
+        
         ghost_directions = []
         for i in range(self.ghost_count):
             ghost_x, ghost_y = self.ghosts[i]
             direction_x = ghost_x - x
             direction_y = ghost_y - y
-            ghost_directions.append((direction_x > 0, direction_y > 0))"
-        """
+            ghost_directions.append((direction_x > 0, direction_y > 0))
+        
+        
         #ghost_positions = tuple(ghostPos for ghostPos in self.ghosts) # Store all ghost positions
         ghost_in_directions = []# is there a ghost in a direction next to pacman
         for (direction_x, direction_y) in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
@@ -293,7 +297,7 @@ class CustomPacManEnv(gym.Env):
         pill_status = int(self.pill_active) # 1 if active, 0 otherwise
         #pill_timer = self.pill_duration if self.pill_active else 0
 
-        state = (x, y) + (tuple(ghost_in_directions), food_positions , pill_positions , pill_status) # State of environment
+        state = (x, y) + (tuple(ghost_in_directions), tuple(ghost_directions), food_positions , pill_positions , pill_status) # State of environment
 
         return (state, self.rm_state) # Return state + Reward Machine State. (RM State will always be 0 for normal QLearning)
     
@@ -485,6 +489,7 @@ class CustomPacManEnv(gym.Env):
         self.score = 0  # Reset score
         #self.play = True
         self.won = 0
+        self.ghosts_eaten = 0
         self.pill_count = self.start_pill_count #amount of pills in the maze
         #self.ghost_count = 4 #amount of ghosts in the maze
         self.ghosts = [] #ghost positions
