@@ -7,7 +7,7 @@ import numpy as np
 import random
 
 def main():
-    env = CustomPacManEnv(maze_size="small", algo="QRM")
+    env = CustomPacManEnv(maze_size="normal", algo="QRM")
 
     min_epsilon = 0.01 #0.05 #0.01
     decay_rate = 1.33e-06 #1.05e-06 #5.5e-07 #2.2e-06
@@ -31,7 +31,7 @@ def main():
     testing_episode_x = []
 
 
-    #load_q_table(env, "small-ql.pkl")
+    #load_q_table(env, "normal-ql.pkl")
     #print("q-table size: ", len(env.q_table))
 
     #print(env.grid)
@@ -129,7 +129,7 @@ def main():
             #time.sleep(0.25)
     #print(env.grid)
 
-    env = CustomPacManEnv(maze_size="small", algo="QL")
+    env = CustomPacManEnv(maze_size="normal", algo="QL")
 
     min_epsilon = 0.01 #0.05 #0.01
     decay_rate = 1.33e-06 #1.05e-06 #5.5e-07 #2.2e-06
@@ -153,7 +153,7 @@ def main():
     QL_testing_episode_x = []
 
 
-    #load_q_table(env, "small-ql.pkl")
+    #load_q_table(env, "normal-ql.pkl")
     #print("q-table size: ", len(env.q_table))
 
     #print(env.grid)
@@ -238,15 +238,16 @@ def main():
 
     #q-table graph
     window = 10000
-    training_q_table_size_small_qrm_agent_1_moving_avg = np.convolve(q_table_size, np.ones(window)/window, mode='valid')
-    training_q_table_size_small_ql_agent_1_moving_avg = np.convolve(QL_q_table_size, np.ones(window)/window, mode='valid')
-    plt.plot(training_q_table_size_small_qrm_agent_1_moving_avg, color = 'black', label='Q-Learning with RM Agent')
-    plt.plot(training_q_table_size_small_ql_agent_1_moving_avg, color = 'grey', linestyle="--", label='Q-Learning Agent')
-    plt.legend(loc='lower left')
+    training_q_table_size_normal_qrm_agent_1_moving_avg = np.convolve(q_table_size, np.ones(window)/window, mode='valid')
+    training_q_table_size_normal_ql_agent_1_moving_avg = np.convolve(QL_q_table_size, np.ones(window)/window, mode='valid')
+    plt.plot(training_q_table_size_normal_qrm_agent_1_moving_avg, color = 'black', label='Q-Learning with RM Agent')
+    plt.plot(training_q_table_size_normal_ql_agent_1_moving_avg, color = 'grey', linestyle="--", label='Q-Learning Agent')
+    plt.legend(loc='lower right')
     plt.xlabel("Episode")
     plt.ylabel("q_table size")
-    plt.title("Q-table size over training episodes (small map)")
-    plt.savefig("q-table-size-QRM-small-17.png", dpi=300, bbox_inches='tight')
+    plt.title("Q-table size over training episodes (normal map)")
+    plt.grid(True)
+    plt.savefig("q-table-size-QRM-normal-1.png", dpi=300, bbox_inches='tight')
     plt.show()
 
     #epsilon graph
@@ -254,108 +255,117 @@ def main():
     plt.legend(loc='lower left')
     plt.xlabel("Episode")
     plt.ylabel("epsilon")
-    plt.title("epsilon over training episodes (small map)")
-    plt.savefig("epsilon-QRM-small-17.png", dpi=300, bbox_inches='tight')
+    plt.title("epsilon over training episodes (normal map)")
+    plt.grid(True)
+    plt.savefig("epsilon-QRM-normal-1.png", dpi=300, bbox_inches='tight')
     plt.show()
 
     #training scores graph
     window = 10000
-    training_scores_small_qrm_agent_1_moving_avg = np.convolve(training_scores, np.ones(window)/window, mode='valid')
-    training_scores_small_ql_agent_1_moving_avg = np.convolve(QL_training_scores, np.ones(window)/window, mode='valid')
-    plt.plot(training_scores_small_qrm_agent_1_moving_avg, color = 'black', label='Q-Learning with RM Agent')
-    plt.plot(training_scores_small_ql_agent_1_moving_avg, color = 'grey', linestyle="--", label='Q-Learning Agent')
-    plt.legend(loc='lower left')    
+    training_scores_normal_qrm_agent_1_moving_avg = np.convolve(training_scores, np.ones(window)/window, mode='valid')
+    training_scores_normal_ql_agent_1_moving_avg = np.convolve(QL_training_scores, np.ones(window)/window, mode='valid')
+    plt.plot(training_scores_normal_qrm_agent_1_moving_avg, color = 'black', label='Q-Learning with RM Agent')
+    plt.plot(training_scores_normal_ql_agent_1_moving_avg, color = 'grey', linestyle="--", label='Q-Learning Agent')
+    plt.legend(loc='lower right')
     plt.xlabel("Episode")
     plt.ylabel("Score")
-    plt.title("Score per training episode (small map)")
-    plt.savefig("training-scores-QRM-small-17.png", dpi=300, bbox_inches='tight')
+    plt.title("Score per training episode (normal map)")
+    plt.grid(True)
+    plt.savefig("training-scores-QRM-normal-1.png", dpi=300, bbox_inches='tight')
     plt.show()
 
     window = 10000
-    training_steps_small_qrm_agent_1_moving_avg = np.convolve(training_steps_taken, np.ones(window)/window, mode='valid')
-    training_steps_small_ql_agent_1_moving_avg = np.convolve(QL_training_steps_taken, np.ones(window)/window, mode='valid')
-    plt.plot(training_steps_small_qrm_agent_1_moving_avg, color = 'black', label='Q-Learning with RM Agent')
-    plt.plot(training_steps_small_ql_agent_1_moving_avg, color = 'grey', linestyle="--", label='Q-Learning Agent')
-    plt.legend(loc='lower left')    
+    training_steps_normal_qrm_agent_1_moving_avg = np.convolve(training_steps_taken, np.ones(window)/window, mode='valid')
+    training_steps_normal_ql_agent_1_moving_avg = np.convolve(QL_training_steps_taken, np.ones(window)/window, mode='valid')
+    plt.plot(training_steps_normal_qrm_agent_1_moving_avg, color = 'black', label='Q-Learning with RM Agent')
+    plt.plot(training_steps_normal_ql_agent_1_moving_avg, color = 'grey', linestyle="--", label='Q-Learning Agent')
+    plt.legend(loc='lower right')    
     plt.xlabel("Episode")
     plt.ylabel("Steps taken")
-    plt.title("Steps taken per training episode (small map)")
-    plt.savefig("training-steps-QRM-small-17", dpi=300, bbox_inches='tight')
+    plt.title("Steps taken per training episode (normal map)")
+    plt.grid(True)
+    plt.savefig("training-steps-QRM-normal-1", dpi=300, bbox_inches='tight')
     plt.show()
 
     window = 10000
-    training_win_small_qrm_agent_1_moving_avg = np.convolve(training_win, np.ones(window)/window, mode='valid')
-    training_win_small_ql_agent_1_moving_avg = np.convolve(QL_training_win, np.ones(window)/window, mode='valid')
-    plt.plot(training_win_small_qrm_agent_1_moving_avg, color = 'black', label='Q-Learning with RM Agent')
-    plt.plot(training_win_small_ql_agent_1_moving_avg, color = 'grey', linestyle="--", label='Q-Learning Agent')
-    plt.legend(loc='lower left')
+    training_win_normal_qrm_agent_1_moving_avg = np.convolve(training_win, np.ones(window)/window, mode='valid')
+    training_win_normal_ql_agent_1_moving_avg = np.convolve(QL_training_win, np.ones(window)/window, mode='valid')
+    plt.plot(training_win_normal_qrm_agent_1_moving_avg, color = 'black', label='Q-Learning with RM Agent')
+    plt.plot(training_win_normal_ql_agent_1_moving_avg, color = 'grey', linestyle="--", label='Q-Learning Agent')
+    plt.legend(loc='upper left')
     plt.xlabel("Episode")
     plt.ylabel("Winrate")
-    plt.title("Winrate per training episode (small map)")
-    plt.savefig("training-win-QRM-small-17", dpi=300, bbox_inches='tight')
+    plt.title("Winrate per training episode (normal map)")
+    plt.grid(True)
+    plt.savefig("training-win-QRM-normal-1", dpi=300, bbox_inches='tight')
     plt.show()
 
     window = 10000
-    training_eaten_small_qrm_agent_1_moving_avg = np.convolve(training_ghosts_eaten, np.ones(window)/window, mode='valid')
-    training_eaten_small_ql_agent_1_moving_avg = np.convolve(QL_training_ghosts_eaten, np.ones(window)/window, mode='valid')
-    plt.plot(training_eaten_small_qrm_agent_1_moving_avg, color = 'black', label='Q-Learning with RM Agent')
-    plt.plot(training_eaten_small_ql_agent_1_moving_avg, color = 'grey', linestyle="--", label='Q-Learning Agent')
-    plt.legend(loc='lower left')
+    training_eaten_normal_qrm_agent_1_moving_avg = np.convolve(training_ghosts_eaten, np.ones(window)/window, mode='valid')
+    training_eaten_normal_ql_agent_1_moving_avg = np.convolve(QL_training_ghosts_eaten, np.ones(window)/window, mode='valid')
+    plt.plot(training_eaten_normal_qrm_agent_1_moving_avg, color = 'black', label='Q-Learning with RM Agent')
+    plt.plot(training_eaten_normal_ql_agent_1_moving_avg, color = 'grey', linestyle="--", label='Q-Learning Agent')
+    plt.legend(loc='upper left')
     plt.xlabel("Episode")
     plt.ylabel("Number of ghosts eaten")
-    plt.title("Number of ghosts eaten per training episode (small map)")
-    plt.savefig("training-eaten-QRM-small-17", dpi=300, bbox_inches='tight')
+    plt.title("Number of ghosts eaten per training episode (normal map)")
+    plt.grid(True)
+    plt.savefig("training-eaten-QRM-normal-1", dpi=300, bbox_inches='tight')
     plt.show()
 
     #-------------------------testing-------------------------#
     #window = 5
-    #test_scores_small_qrm_agent_1_moving_avg = np.convolve(testing_scores, np.ones(window)/window, mode='valid')
+    #test_scores_normal_qrm_agent_1_moving_avg = np.convolve(testing_scores, np.ones(window)/window, mode='valid')
     #x = testing_episode_x[window - 1:]
     #print(len(x))
-    #print(len(test_scores_small_qrm_agent_1_moving_avg))
-    #plt.plot(x, test_scores_small_qrm_agent_1_moving_avg, color = 'black', label='Q-Learning with RM Agent (alpla=0.05) (gamma=0.99) (epsilon=0.7)')
+    #print(len(test_scores_normal_qrm_agent_1_moving_avg))
+    #plt.plot(x, test_scores_normal_qrm_agent_1_moving_avg, color = 'black', label='Q-Learning with RM Agent (alpla=0.05) (gamma=0.99) (epsilon=0.7)')
     plt.plot(testing_episode_x, testing_scores, color = 'black', label='Q-Learning with RM Agent')
     plt.plot(QL_testing_episode_x, QL_testing_scores, color = 'grey', linestyle="--", label='Q-Learning Agent')
-    plt.legend(loc='lower left')
+    plt.legend(loc='lower right')
     plt.xlabel("Episode")
     plt.ylabel("Average score")
-    plt.title("Average test score every 10k training episodes (small map)")
-    plt.savefig("test-scores-QRM-small-17", dpi=300, bbox_inches='tight')
+    plt.title("Average test score every 10k training episodes (normal map)")
+    plt.grid(True)
+    plt.savefig("test-scores-QRM-normal-1", dpi=300, bbox_inches='tight')
     plt.show()
 
     #window = 5
-    #test_steps_small_qrm_agent_1_moving_avg = np.convolve(testing_steps_taken, np.ones(window)/window, mode='valid')
+    #test_steps_normal_qrm_agent_1_moving_avg = np.convolve(testing_steps_taken, np.ones(window)/window, mode='valid')
     #x = testing_episode_x[window - 1:]
-    #plt.plot(x, test_steps_small_qrm_agent_1_moving_avg, color = 'black', label='Q-Learning with RM Agent (alpla=0.05) (gamma=0.99) (epsilon=0.7)')
+    #plt.plot(x, test_steps_normal_qrm_agent_1_moving_avg, color = 'black', label='Q-Learning with RM Agent (alpla=0.05) (gamma=0.99) (epsilon=0.7)')
     plt.plot(testing_episode_x, testing_steps_taken, color = 'black', label='Q-Learning with RM Agent')
     plt.plot(QL_testing_episode_x, QL_testing_steps_taken, color = 'grey', linestyle="--", label='Q-Learning Agent')
-    plt.legend(loc='lower left')
+    plt.legend(loc='lower right')
     plt.xlabel("Episode")
     plt.ylabel("Average number of steps taken")
-    plt.title("Average number of steps taken every 10k training episodes (small map)")
-    plt.savefig("test-steps-QRM-small-17", dpi=300, bbox_inches='tight')
+    plt.title("Average number of steps taken every 10k training episodes (normal map)")
+    plt.grid(True)
+    plt.savefig("test-steps-QRM-normal-1", dpi=300, bbox_inches='tight')
     plt.show()
 
     #window = 5
-    #test_win_small_qrm_agent_1_moving_avg = np.convolve(testing_win, np.ones(window)/window, mode='valid')
+    #test_win_normal_qrm_agent_1_moving_avg = np.convolve(testing_win, np.ones(window)/window, mode='valid')
     #x = testing_episode_x[window - 1:]
-    #plt.plot(x, test_win_small_qrm_agent_1_moving_avg, color = 'black', label='Q-Learning Agent with RM (alpla=0.05) (gamma=0.99) (epsilon=0.7)')
+    #plt.plot(x, test_win_normal_qrm_agent_1_moving_avg, color = 'black', label='Q-Learning Agent with RM (alpla=0.05) (gamma=0.99) (epsilon=0.7)')
     plt.plot(testing_episode_x, testing_win, color = 'black', label='Q-Learning with RM Agent')
     plt.plot(QL_testing_episode_x, QL_testing_win, color = 'grey', linestyle="--", label='Q-Learning Agent')
-    plt.legend(loc='lower left')
+    plt.legend(loc='upper left')
     plt.xlabel("Episode")
     plt.ylabel("Average Winrate")
-    plt.title("Average winrate every 10k training episodes (small map)")
-    plt.savefig("test-win-QRM-small-17", dpi=300, bbox_inches='tight')
+    plt.title("Average winrate every 10k training episodes (normal map)")
+    plt.grid(True)
+    plt.savefig("test-win-QRM-normal-1", dpi=300, bbox_inches='tight')
     plt.show()
 
     plt.plot(testing_episode_x, testing_ghosts_eaten, color = 'black', label='Q-Learning with RM Agent')
     plt.plot(QL_testing_episode_x, QL_testing_ghosts_eaten, color = 'grey', linestyle="--", label='Q-Learning Agent')
-    plt.legend(loc='lower left')
+    plt.legend(loc='upper left')
     plt.xlabel("Episode")
     plt.ylabel("Average Number of ghosts eaten")
-    plt.title("Average Number of ghosts eaten every 10k training episodes (small map)")
-    plt.savefig("test-eaten-QRM-small-17", dpi=300, bbox_inches='tight')
+    plt.title("Average Number of ghosts eaten every 10k training episodes (normal map)")
+    plt.grid(True)
+    plt.savefig("test-eaten-QRM-normal-1", dpi=300, bbox_inches='tight')
     plt.show()
 
     #---------see for your self--------------
@@ -372,7 +382,7 @@ def main():
 
 
 
-    #save_q_table(env, "small-qrm.pkl")
+    #save_q_table(env, "normal-qrm.pkl")
 
     env.close()
 
