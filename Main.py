@@ -475,14 +475,6 @@ def ghostHunter():
 
         env.play = True
 
-        #remove random food to help learn states
-        num_food_to_remove = random.randint(0, env.food_count-1)#pick 0 to all but 1 food to remove
-        foods_to_remove = random.sample(env.food, num_food_to_remove)
-        for food_pos in foods_to_remove:
-            env.food.remove(food_pos)
-            env.grid[food_pos] = 0  # Clear food from grid
-            env.food_count -= 1
-
         #start at meaning full points of game to help learning. for example start on pill 1 position
         if(i % 4 == 1):#start training episode with first pill already picked up
             env.pill_active = True
@@ -544,7 +536,7 @@ def ghostHunter():
     
     #-----------------------------------------#
 
-    env = CustomPacManEnv(maze_size="small", algo="QL")
+    env = GhostHunterEnv(maze_size="small", algo="QL")
 
     min_epsilon = 0.01 #0.05 #0.01
     decay_rate = 1.33e-06 #1.05e-06 #5.5e-07 #2.2e-06
@@ -583,14 +575,6 @@ def ghostHunter():
         #env.epsilon = min_epsilon + (1.0 - min_epsilon) * np.exp(-decay_rate * i)
 
         env.play = True
-
-        #remove random food to help learn states
-        num_food_to_remove = random.randint(0, env.food_count-1)#pick 0 to all but 1 food to remove
-        foods_to_remove = random.sample(env.food, num_food_to_remove)
-        for food_pos in foods_to_remove:
-            env.food.remove(food_pos)
-            env.grid[food_pos] = 0  # Clear food from grid
-            env.food_count -= 1
 
         #start at meaning full points of game to help learning. for example start on pill 1 position
         if(i % 4 == 1):#start training episode with first pill already picked up
