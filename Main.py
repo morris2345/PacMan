@@ -7,7 +7,6 @@ import numpy as np
 import random
 import os
 import sys
-
 from GhostHunter import GhostHunterEnv
 
 def main():
@@ -20,11 +19,12 @@ def main():
     #ghostHunter()
 
 def NormalPacMan():
-    env = CustomPacManEnv(maze_size="normal", algo="QRM")
+    env = CustomPacManEnv(maze_size="small", algo="QRM")
 
     min_epsilon = 0.01 #0.05 #0.01
     decay_rate = 1.33e-06 #1.05e-06 #5.5e-07 #2.2e-06
 
+    start_episode = 0
     number_of_training_games = 1000000 #2000000 #500000
     test_every_X_games = 10000
     number_of_testing_games = 1000 #2500 #5000
@@ -43,12 +43,29 @@ def NormalPacMan():
 
     testing_episode_x = []
 
+    if os.path.exists("normal_training_QRM_checkpoint.pkl"):
+        with open("normal_training_QRM_checkpoint.pkl", "rb") as f:
+            saved_data = pickle.load(f)
+        start_episode = saved_data['episode'] + 1
+        env.q_table = saved_data['q_table']
+        q_table_size = saved_data['q_table_size']
+        eps = saved_data['eps']
+        training_scores = saved_data['training_scores']
+        training_steps_taken = saved_data['training_steps_taken']
+        training_win = saved_data['training_win']
+        training_ghosts_eaten = saved_data['training_ghosts_eaten']
+        testing_scores = saved_data['testing_scores']
+        testing_steps_taken = saved_data['testing_steps_taken']
+        testing_win = saved_data['testing_win']
+        testing_ghosts_eaten = saved_data['testing_ghosts_eaten']
+        testing_episode_x = saved_data['testing_episode_x']
+        print("Loaded checkpoint from episode", saved_data['episode'])
 
     #load_q_table(env, "normal-ql.pkl")
     #print("q-table size: ", len(env.q_table))
 
     #print(env.grid)
-    for i in range(number_of_training_games):
+    for i in range(start_episode, number_of_training_games):
         
         steps_taken = 0
 
@@ -128,6 +145,26 @@ def NormalPacMan():
                 testing_episode_x.append(i)
                 testing(number_of_testing_games, env, testing_scores, testing_steps_taken, testing_win, testing_ghosts_eaten)
 
+        if(i % 250000 == 0 and i != 0):
+            save_data = {
+                'episode': i,
+                'q_table': env.q_table,
+                'q_table_size': q_table_size,
+                'eps': eps,
+                'training_scores': training_scores,
+                'training_steps_taken': training_steps_taken,
+                'training_win': training_win,
+                'training_ghosts_eaten': training_ghosts_eaten,
+                'testing_scores': testing_scores,
+                'testing_steps_taken': testing_steps_taken,
+                'testing_win': testing_win,
+                'testing_ghosts_eaten': testing_ghosts_eaten,
+                'testing_episode_x': testing_episode_x
+            }
+            with open("normal_training_QRM_checkpoint.pkl", "wb") as f:
+                pickle.dump(save_data, f)
+            print("Saved checkpoint")
+
     env.close()
         #print(i)
         #print("--------------------------------------------------")
@@ -145,11 +182,12 @@ def NormalPacMan():
             #time.sleep(0.25)
     #print(env.grid)
 
-    env = CustomPacManEnv(maze_size="normal", algo="QL")
+    env = CustomPacManEnv(maze_size="small", algo="QL")
 
     min_epsilon = 0.01 #0.05 #0.01
     decay_rate = 1.33e-06 #1.05e-06 #5.5e-07 #2.2e-06
 
+    start_episode = 0
     number_of_training_games = 1000000 #2000000 #500000
     test_every_X_games = 10000
     number_of_testing_games = 1000 #2500 #5000
@@ -168,12 +206,29 @@ def NormalPacMan():
 
     QL_testing_episode_x = []
 
+    if os.path.exists("normal_training_QL_checkpoint.pkl"):
+        with open("normal_training_QL_checkpoint.pkl", "rb") as f:
+            saved_data = pickle.load(f)
+        start_episode = saved_data['episode'] + 1
+        env.q_table = saved_data['q_table']
+        QL_q_table_size = saved_data['q_table_size']
+        QL_eps = saved_data['eps']
+        QL_training_scores = saved_data['training_scores']
+        QL_training_steps_taken = saved_data['training_steps_taken']
+        QL_training_win = saved_data['training_win']
+        QL_training_ghosts_eaten = saved_data['training_ghosts_eaten']
+        QL_testing_scores = saved_data['testing_scores']
+        QL_testing_steps_taken = saved_data['testing_steps_taken']
+        QL_testing_win = saved_data['testing_win']
+        QL_testing_ghosts_eaten = saved_data['testing_ghosts_eaten']
+        QL_testing_episode_x = saved_data['testing_episode_x']
+        print("Loaded checkpoint from episode", saved_data['episode'])
 
     #load_q_table(env, "normal-ql.pkl")
     #print("q-table size: ", len(env.q_table))
 
     #print(env.grid)
-    for i in range(number_of_training_games):
+    for i in range(start_episode, number_of_training_games):
         
         steps_taken = 0
 
@@ -252,6 +307,26 @@ def NormalPacMan():
                 #print("ëpsilon:", env.epsilon)
                 QL_testing_episode_x.append(i)
                 testing(number_of_testing_games, env, QL_testing_scores, QL_testing_steps_taken, QL_testing_win, QL_testing_ghosts_eaten)
+
+        if(i % 250000 == 0 and i != 0):
+            save_data = {
+                'episode': i,
+                'q_table': env.q_table,
+                'q_table_size': QL_q_table_size,
+                'eps': QL_eps,
+                'training_scores': QL_training_scores,
+                'training_steps_taken': QL_training_steps_taken,
+                'training_win': QL_training_win,
+                'training_ghosts_eaten': QL_training_ghosts_eaten,
+                'testing_scores': QL_testing_scores,
+                'testing_steps_taken': QL_testing_steps_taken,
+                'testing_win': QL_testing_win,
+                'testing_ghosts_eaten': QL_testing_ghosts_eaten,
+                'testing_episode_x': QL_testing_episode_x
+            }
+            with open("normal_training_QL_checkpoint.pkl", "wb") as f:
+                pickle.dump(save_data, f)
+            print("Saved checkpoint")
 
 
 
