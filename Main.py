@@ -5,16 +5,19 @@ import time
 import pickle
 import numpy as np
 import random
+import os
+import sys
 
 from GhostHunter import GhostHunterEnv
 
 def main():
 
+    #print(sys.version)
     #Run normal version of pacman
-    #NormalPacMan()
+    NormalPacMan()
     
     #Run ghost hunter version of pacman
-    ghostHunter()
+    #ghostHunter()
 
 def NormalPacMan():
     env = CustomPacManEnv(maze_size="normal", algo="QRM")
@@ -105,6 +108,9 @@ def NormalPacMan():
         while(env.play == True): # game loop
             env.step(use_greedy_strategy=False)
             steps_taken += 1
+            if(steps_taken >= 1000):
+                print("training game took to long")
+                env.play = False
                 
         eps.append(env.epsilon)
         q_table_size.append(len(env.q_table))
@@ -227,6 +233,9 @@ def NormalPacMan():
         while(env.play == True): # game loop
             env.step(use_greedy_strategy=False)
             steps_taken += 1
+            if(steps_taken >= 1000):
+                print("training game took to long")
+                env.play = False
                 
         QL_eps.append(env.epsilon)
         QL_q_table_size.append(len(env.q_table))
@@ -252,7 +261,7 @@ def NormalPacMan():
     training_q_table_size_normal_ql_agent_1_moving_avg = np.convolve(QL_q_table_size, np.ones(window)/window, mode='valid')
     plt.plot(training_q_table_size_normal_qrm_agent_1_moving_avg, color = 'black', label='Q-Learning with RM Agent')
     plt.plot(training_q_table_size_normal_ql_agent_1_moving_avg, color = 'grey', linestyle="--", label='Q-Learning Agent')
-    plt.legend(loc='lower right')
+    plt.legend()
     plt.xlabel("Episode")
     plt.ylabel("q_table size")
     plt.title("Q-table size over training episodes (normal map)")
@@ -262,7 +271,7 @@ def NormalPacMan():
 
     #epsilon graph
     plt.plot(eps, color = 'black', label='epsilon value')
-    plt.legend(loc='lower left')
+    plt.legend()
     plt.xlabel("Episode")
     plt.ylabel("epsilon")
     plt.title("epsilon over training episodes (normal map)")
@@ -276,7 +285,7 @@ def NormalPacMan():
     training_scores_normal_ql_agent_1_moving_avg = np.convolve(QL_training_scores, np.ones(window)/window, mode='valid')
     plt.plot(training_scores_normal_qrm_agent_1_moving_avg, color = 'black', label='Q-Learning with RM Agent')
     plt.plot(training_scores_normal_ql_agent_1_moving_avg, color = 'grey', linestyle="--", label='Q-Learning Agent')
-    plt.legend(loc='lower right')
+    plt.legend()
     plt.xlabel("Episode")
     plt.ylabel("Score")
     plt.title("Score per training episode (normal map)")
@@ -289,7 +298,7 @@ def NormalPacMan():
     training_steps_normal_ql_agent_1_moving_avg = np.convolve(QL_training_steps_taken, np.ones(window)/window, mode='valid')
     plt.plot(training_steps_normal_qrm_agent_1_moving_avg, color = 'black', label='Q-Learning with RM Agent')
     plt.plot(training_steps_normal_ql_agent_1_moving_avg, color = 'grey', linestyle="--", label='Q-Learning Agent')
-    plt.legend(loc='lower right')    
+    plt.legend()    
     plt.xlabel("Episode")
     plt.ylabel("Steps taken")
     plt.title("Steps taken per training episode (normal map)")
@@ -302,7 +311,7 @@ def NormalPacMan():
     training_win_normal_ql_agent_1_moving_avg = np.convolve(QL_training_win, np.ones(window)/window, mode='valid')
     plt.plot(training_win_normal_qrm_agent_1_moving_avg, color = 'black', label='Q-Learning with RM Agent')
     plt.plot(training_win_normal_ql_agent_1_moving_avg, color = 'grey', linestyle="--", label='Q-Learning Agent')
-    plt.legend(loc='upper left')
+    plt.legend()
     plt.xlabel("Episode")
     plt.ylabel("Winrate")
     plt.title("Winrate per training episode (normal map)")
@@ -315,7 +324,7 @@ def NormalPacMan():
     training_eaten_normal_ql_agent_1_moving_avg = np.convolve(QL_training_ghosts_eaten, np.ones(window)/window, mode='valid')
     plt.plot(training_eaten_normal_qrm_agent_1_moving_avg, color = 'black', label='Q-Learning with RM Agent')
     plt.plot(training_eaten_normal_ql_agent_1_moving_avg, color = 'grey', linestyle="--", label='Q-Learning Agent')
-    plt.legend(loc='upper left')
+    plt.legend()
     plt.xlabel("Episode")
     plt.ylabel("Number of ghosts eaten")
     plt.title("Number of ghosts eaten per training episode (normal map)")
@@ -332,7 +341,7 @@ def NormalPacMan():
     #plt.plot(x, test_scores_normal_qrm_agent_1_moving_avg, color = 'black', label='Q-Learning with RM Agent (alpla=0.05) (gamma=0.99) (epsilon=0.7)')
     plt.plot(testing_episode_x, testing_scores, color = 'black', label='Q-Learning with RM Agent')
     plt.plot(QL_testing_episode_x, QL_testing_scores, color = 'grey', linestyle="--", label='Q-Learning Agent')
-    plt.legend(loc='lower right')
+    plt.legend()
     plt.xlabel("Episode")
     plt.ylabel("Average score")
     plt.title("Average test score every 10k training episodes (normal map)")
@@ -346,7 +355,7 @@ def NormalPacMan():
     #plt.plot(x, test_steps_normal_qrm_agent_1_moving_avg, color = 'black', label='Q-Learning with RM Agent (alpla=0.05) (gamma=0.99) (epsilon=0.7)')
     plt.plot(testing_episode_x, testing_steps_taken, color = 'black', label='Q-Learning with RM Agent')
     plt.plot(QL_testing_episode_x, QL_testing_steps_taken, color = 'grey', linestyle="--", label='Q-Learning Agent')
-    plt.legend(loc='lower right')
+    plt.legend()
     plt.xlabel("Episode")
     plt.ylabel("Average number of steps taken")
     plt.title("Average number of steps taken every 10k training episodes (normal map)")
@@ -360,7 +369,7 @@ def NormalPacMan():
     #plt.plot(x, test_win_normal_qrm_agent_1_moving_avg, color = 'black', label='Q-Learning Agent with RM (alpla=0.05) (gamma=0.99) (epsilon=0.7)')
     plt.plot(testing_episode_x, testing_win, color = 'black', label='Q-Learning with RM Agent')
     plt.plot(QL_testing_episode_x, QL_testing_win, color = 'grey', linestyle="--", label='Q-Learning Agent')
-    plt.legend(loc='upper left')
+    plt.legend()
     plt.xlabel("Episode")
     plt.ylabel("Average Winrate")
     plt.title("Average winrate every 10k training episodes (normal map)")
@@ -370,7 +379,7 @@ def NormalPacMan():
 
     plt.plot(testing_episode_x, testing_ghosts_eaten, color = 'black', label='Q-Learning with RM Agent')
     plt.plot(QL_testing_episode_x, QL_testing_ghosts_eaten, color = 'grey', linestyle="--", label='Q-Learning Agent')
-    plt.legend(loc='upper left')
+    plt.legend()
     plt.xlabel("Episode")
     plt.ylabel("Average Number of ghosts eaten")
     plt.title("Average Number of ghosts eaten every 10k training episodes (normal map)")
@@ -410,8 +419,10 @@ def testing(number_of_testing_games, env, testing_scores, testing_steps_taken, t
             env.play = True
             while(env.play == True):
                 env.step(use_greedy_strategy=True)
-
                 steps_taken += 1
+                if(steps_taken >= 1000):
+                    #print("game took to long")
+                    env.play = False
 
                 #if(i % 1000 == 0):
                     #print(i)
@@ -432,6 +443,8 @@ def testing(number_of_testing_games, env, testing_scores, testing_steps_taken, t
         testing_win.append(avg_win)
         testing_ghosts_eaten.append(avg_ghosts_eaten)
         print("avg score testing: ", avg_score)
+        print("avg steps: ", avg_steps)
+        print("avg ghosts eaten: ", avg_ghosts_eaten)
 
 #train and test both algorithms on the ghosthunter environment
 def ghostHunter():
@@ -440,6 +453,7 @@ def ghostHunter():
     min_epsilon = 0.01 #0.05 #0.01
     decay_rate = 1.33e-06 #1.05e-06 #5.5e-07 #2.2e-06
 
+    start_episode = 0
     number_of_training_games = 1000000 #2000000 #500000
     test_every_X_games = 10000
     number_of_testing_games = 1000 #2500 #5000
@@ -458,12 +472,30 @@ def ghostHunter():
 
     testing_episode_x = []
 
+    if os.path.exists("ghost_training_QRM_checkpoint.pkl"):
+        with open("ghost_training_QRM_checkpoint.pkl", "rb") as f:
+            saved_data = pickle.load(f)
+        start_episode = saved_data['episode'] + 1
+        env.q_table = saved_data['q_table']
+        q_table_size = saved_data['q_table_size']
+        eps = saved_data['eps']
+        training_scores = saved_data['training_scores']
+        training_steps_taken = saved_data['training_steps_taken']
+        training_win = saved_data['training_win']
+        training_ghosts_eaten = saved_data['training_ghosts_eaten']
+        testing_scores = saved_data['testing_scores']
+        testing_steps_taken = saved_data['testing_steps_taken']
+        testing_win = saved_data['testing_win']
+        testing_ghosts_eaten = saved_data['testing_ghosts_eaten']
+        testing_episode_x = saved_data['testing_episode_x']
+        print("Loaded checkpoint from episode", saved_data['episode'])
+
 
     #load_q_table(env, "normal-ql.pkl")
     #print("q-table size: ", len(env.q_table))
 
     #print(env.grid)
-    for i in range(number_of_training_games):
+    for i in range(start_episode, number_of_training_games):
         
         steps_taken = 0
 
@@ -515,6 +547,9 @@ def ghostHunter():
         while(env.play == True): # game loop
             env.step(use_greedy_strategy=False)
             steps_taken += 1
+            if(steps_taken >= 1000):
+                print("training game took to long")
+                env.play = False
                 
         eps.append(env.epsilon)
         q_table_size.append(len(env.q_table))
@@ -532,6 +567,26 @@ def ghostHunter():
                 testing_episode_x.append(i)
                 testing(number_of_testing_games, env, testing_scores, testing_steps_taken, testing_win, testing_ghosts_eaten)
 
+        if(i % 250000 == 0 and i != 0):
+            save_data = {
+                'episode': i,
+                'q_table': env.q_table,
+                'q_table_size': q_table_size,
+                'eps': eps,
+                'training_scores': training_scores,
+                'training_steps_taken': training_steps_taken,
+                'training_win': training_win,
+                'training_ghosts_eaten': training_ghosts_eaten,
+                'testing_scores': testing_scores,
+                'testing_steps_taken': testing_steps_taken,
+                'testing_win': testing_win,
+                'testing_ghosts_eaten': testing_ghosts_eaten,
+                'testing_episode_x': testing_episode_x
+            }
+            with open("ghost_training_QRM_checkpoint.pkl", "wb") as f:
+                pickle.dump(save_data, f)
+            print("Saved checkpoint")
+
     env.close()
     
     #-----------------------------------------#
@@ -541,6 +596,7 @@ def ghostHunter():
     min_epsilon = 0.01 #0.05 #0.01
     decay_rate = 1.33e-06 #1.05e-06 #5.5e-07 #2.2e-06
 
+    start_episode = 0
     number_of_training_games = 1000000 #2000000 #500000
     test_every_X_games = 10000
     number_of_testing_games = 1000 #2500 #5000
@@ -560,11 +616,29 @@ def ghostHunter():
     QL_testing_episode_x = []
 
 
+    if os.path.exists("ghost_training_QL_checkpoint.pkl"):
+        with open("ghost_training_QL_checkpoint.pkl", "rb") as f:
+            saved_data = pickle.load(f)
+        start_episode = saved_data['episode'] + 1
+        env.q_table = saved_data['q_table']
+        QL_q_table_size = saved_data['q_table_size']
+        QL_eps = saved_data['eps']
+        QL_training_scores = saved_data['training_scores']
+        QL_training_steps_taken = saved_data['training_steps_taken']
+        QL_training_win = saved_data['training_win']
+        QL_training_ghosts_eaten = saved_data['training_ghosts_eaten']
+        QL_testing_scores = saved_data['testing_scores']
+        QL_testing_steps_taken = saved_data['testing_steps_taken']
+        QL_testing_win = saved_data['testing_win']
+        QL_testing_ghosts_eaten = saved_data['testing_ghosts_eaten']
+        QL_testing_episode_x = saved_data['testing_episode_x']
+        print("Loaded checkpoint from episode", saved_data['episode'])
+
     #load_q_table(env, "normal-ql.pkl")
     #print("q-table size: ", len(env.q_table))
 
     #print(env.grid)
-    for i in range(number_of_training_games):
+    for i in range(start_episode, number_of_training_games):
         
         steps_taken = 0
 
@@ -616,6 +690,9 @@ def ghostHunter():
         while(env.play == True): # game loop
             env.step(use_greedy_strategy=False)
             steps_taken += 1
+            if(steps_taken >= 1000):
+                print("training game took to long")
+                env.play = False
                 
         QL_eps.append(env.epsilon)
         QL_q_table_size.append(len(env.q_table))
@@ -633,6 +710,26 @@ def ghostHunter():
                 QL_testing_episode_x.append(i)
                 testing(number_of_testing_games, env, QL_testing_scores, QL_testing_steps_taken, QL_testing_win, QL_testing_ghosts_eaten)
     
+
+        if(i % 250000 == 0 and i != 0):
+            save_data = {
+                'episode': i,
+                'q_table': env.q_table,
+                'q_table_size': q_table_size,
+                'eps': QL_eps,
+                'training_scores': QL_training_scores,
+                'training_steps_taken': QL_training_steps_taken,
+                'training_win': QL_training_win,
+                'training_ghosts_eaten': QL_training_ghosts_eaten,
+                'testing_scores': QL_testing_scores,
+                'testing_steps_taken': QL_testing_steps_taken,
+                'testing_win': QL_testing_win,
+                'testing_ghosts_eaten': QL_testing_ghosts_eaten,
+                'testing_episode_x': QL_testing_episode_x
+            }
+            with open("ghost_training_QL_checkpoint.pkl", "wb") as f:
+                pickle.dump(save_data, f)
+            print("Saved checkpoint")
     #----------------------------------#
 
     #q-table graph
@@ -641,7 +738,7 @@ def ghostHunter():
     training_q_table_size_normal_ql_agent_1_moving_avg = np.convolve(QL_q_table_size, np.ones(window)/window, mode='valid')
     plt.plot(training_q_table_size_normal_qrm_agent_1_moving_avg, color = 'black', label='Q-Learning with RM Agent')
     plt.plot(training_q_table_size_normal_ql_agent_1_moving_avg, color = 'grey', linestyle="--", label='Q-Learning Agent')
-    plt.legend(loc='lower right')
+    plt.legend()
     plt.xlabel("Episode")
     plt.ylabel("q_table size")
     plt.title("Q-table size over training episodes (ghost hunter small map)")
@@ -651,7 +748,7 @@ def ghostHunter():
 
     #epsilon graph
     plt.plot(eps, color = 'black', label='epsilon value')
-    plt.legend(loc='lower left')
+    plt.legend()
     plt.xlabel("Episode")
     plt.ylabel("epsilon")
     plt.title("epsilon over training episodes (ghost hunter small map)")
@@ -665,7 +762,7 @@ def ghostHunter():
     training_scores_normal_ql_agent_1_moving_avg = np.convolve(QL_training_scores, np.ones(window)/window, mode='valid')
     plt.plot(training_scores_normal_qrm_agent_1_moving_avg, color = 'black', label='Q-Learning with RM Agent')
     plt.plot(training_scores_normal_ql_agent_1_moving_avg, color = 'grey', linestyle="--", label='Q-Learning Agent')
-    plt.legend(loc='lower right')
+    plt.legend()
     plt.xlabel("Episode")
     plt.ylabel("Score")
     plt.title("Score per training episode (ghost hunter small map)")
@@ -678,7 +775,7 @@ def ghostHunter():
     training_steps_normal_ql_agent_1_moving_avg = np.convolve(QL_training_steps_taken, np.ones(window)/window, mode='valid')
     plt.plot(training_steps_normal_qrm_agent_1_moving_avg, color = 'black', label='Q-Learning with RM Agent')
     plt.plot(training_steps_normal_ql_agent_1_moving_avg, color = 'grey', linestyle="--", label='Q-Learning Agent')
-    plt.legend(loc='lower right')    
+    plt.legend()    
     plt.xlabel("Episode")
     plt.ylabel("Steps taken")
     plt.title("Steps taken per training episode (ghost hunter small map)")
@@ -691,7 +788,7 @@ def ghostHunter():
     training_win_normal_ql_agent_1_moving_avg = np.convolve(QL_training_win, np.ones(window)/window, mode='valid')
     plt.plot(training_win_normal_qrm_agent_1_moving_avg, color = 'black', label='Q-Learning with RM Agent')
     plt.plot(training_win_normal_ql_agent_1_moving_avg, color = 'grey', linestyle="--", label='Q-Learning Agent')
-    plt.legend(loc='upper left')
+    plt.legend()
     plt.xlabel("Episode")
     plt.ylabel("Winrate")
     plt.title("Winrate per training episode (ghost hunter small map)")
@@ -704,7 +801,7 @@ def ghostHunter():
     training_eaten_normal_ql_agent_1_moving_avg = np.convolve(QL_training_ghosts_eaten, np.ones(window)/window, mode='valid')
     plt.plot(training_eaten_normal_qrm_agent_1_moving_avg, color = 'black', label='Q-Learning with RM Agent')
     plt.plot(training_eaten_normal_ql_agent_1_moving_avg, color = 'grey', linestyle="--", label='Q-Learning Agent')
-    plt.legend(loc='upper left')
+    plt.legend()
     plt.xlabel("Episode")
     plt.ylabel("Number of ghosts eaten")
     plt.title("Number of ghosts eaten per training episode (ghost hunter small map)")
@@ -721,7 +818,7 @@ def ghostHunter():
     #plt.plot(x, test_scores_normal_qrm_agent_1_moving_avg, color = 'black', label='Q-Learning with RM Agent (alpla=0.05) (gamma=0.99) (epsilon=0.7)')
     plt.plot(testing_episode_x, testing_scores, color = 'black', label='Q-Learning with RM Agent')
     plt.plot(QL_testing_episode_x, QL_testing_scores, color = 'grey', linestyle="--", label='Q-Learning Agent')
-    plt.legend(loc='lower right')
+    plt.legend()
     plt.xlabel("Episode")
     plt.ylabel("Average score")
     plt.title("Average test score every 10k training episodes (ghost hunter small map)")
@@ -735,7 +832,7 @@ def ghostHunter():
     #plt.plot(x, test_steps_normal_qrm_agent_1_moving_avg, color = 'black', label='Q-Learning with RM Agent (alpla=0.05) (gamma=0.99) (epsilon=0.7)')
     plt.plot(testing_episode_x, testing_steps_taken, color = 'black', label='Q-Learning with RM Agent')
     plt.plot(QL_testing_episode_x, QL_testing_steps_taken, color = 'grey', linestyle="--", label='Q-Learning Agent')
-    plt.legend(loc='lower right')
+    plt.legend()
     plt.xlabel("Episode")
     plt.ylabel("Average number of steps taken")
     plt.title("Average number of steps taken every 10k training episodes (ghost hunter small map)")
@@ -749,7 +846,7 @@ def ghostHunter():
     #plt.plot(x, test_win_normal_qrm_agent_1_moving_avg, color = 'black', label='Q-Learning Agent with RM (alpla=0.05) (gamma=0.99) (epsilon=0.7)')
     plt.plot(testing_episode_x, testing_win, color = 'black', label='Q-Learning with RM Agent')
     plt.plot(QL_testing_episode_x, QL_testing_win, color = 'grey', linestyle="--", label='Q-Learning Agent')
-    plt.legend(loc='upper left')
+    plt.legend()
     plt.xlabel("Episode")
     plt.ylabel("Average Winrate")
     plt.title("Average winrate every 10k training episodes (ghost hunter small map)")
@@ -759,7 +856,7 @@ def ghostHunter():
 
     plt.plot(testing_episode_x, testing_ghosts_eaten, color = 'black', label='Q-Learning with RM Agent')
     plt.plot(QL_testing_episode_x, QL_testing_ghosts_eaten, color = 'grey', linestyle="--", label='Q-Learning Agent')
-    plt.legend(loc='upper left')
+    plt.legend()
     plt.xlabel("Episode")
     plt.ylabel("Average Number of ghosts eaten")
     plt.title("Average Number of ghosts eaten every 10k training episodes (ghost hunter small map)")
@@ -779,6 +876,7 @@ def ghostHunter():
         env.reset()
     #-----------------------------------------
 
+    env.close()
 
 def save_q_table(self, filename="q_table.pkl"):
     with open(filename, "wb") as f:

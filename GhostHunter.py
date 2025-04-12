@@ -143,7 +143,7 @@ class GhostHunterEnv(gym.Env):
                     self.score += 500
                     reward += self.eat_ghost_reward
                     self.ghosts_eaten += 1
-                elif(self.food_count > 0 and self.pill_active == False):
+                elif(self.pill_active == False):
                     self.lives -= 1
                     reward += self.lose_live_reward
 
@@ -419,6 +419,9 @@ class GhostHunterEnv(gym.Env):
             self.won = 0
             #print("Out of lives")
             #self.reset()
+        elif(not self.pill_active and len(self.pills) <= 0): #if all pills are gone/picked up and PacMan doesnt have a pill active
+            self.play = False #end game
+
 
         
     def reset(self):
