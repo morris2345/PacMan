@@ -49,6 +49,7 @@ def NormalPacMan():
         start_episode = saved_data['episode'] + 1
         env.q_table = saved_data['q_table']
         q_table_size = saved_data['q_table_size']
+        env.epsilon = saved_data['epsilon']
         eps = saved_data['eps']
         training_scores = saved_data['training_scores']
         training_steps_taken = saved_data['training_steps_taken']
@@ -150,6 +151,7 @@ def NormalPacMan():
                 'episode': i,
                 'q_table': env.q_table,
                 'q_table_size': q_table_size,
+                'epsilon': env.epsilon,
                 'eps': eps,
                 'training_scores': training_scores,
                 'training_steps_taken': training_steps_taken,
@@ -211,6 +213,7 @@ def NormalPacMan():
             saved_data = pickle.load(f)
         start_episode = saved_data['episode'] + 1
         env.q_table = saved_data['q_table']
+        env.epsilon = saved_data['epsilon']
         QL_q_table_size = saved_data['q_table_size']
         QL_eps = saved_data['eps']
         QL_training_scores = saved_data['training_scores']
@@ -313,6 +316,7 @@ def NormalPacMan():
                 'episode': i,
                 'q_table': env.q_table,
                 'q_table_size': QL_q_table_size,
+                'epsilon': env.epsilon,
                 'eps': QL_eps,
                 'training_scores': QL_training_scores,
                 'training_steps_taken': QL_training_steps_taken,
@@ -339,9 +343,9 @@ def NormalPacMan():
     plt.legend()
     plt.xlabel("Episode")
     plt.ylabel("q_table size")
-    plt.title("Q-table size over training episodes (normal map)")
+    plt.title("Q-table size over training episodes (small map)")
     plt.grid(True)
-    plt.savefig("q-table-size-QRM-normal-1.png", dpi=300, bbox_inches='tight')
+    plt.savefig("q-table-size-QRM-small-1.png", dpi=300, bbox_inches='tight')
     plt.show()
 
     #epsilon graph
@@ -349,9 +353,9 @@ def NormalPacMan():
     plt.legend()
     plt.xlabel("Episode")
     plt.ylabel("epsilon")
-    plt.title("epsilon over training episodes (normal map)")
+    plt.title("epsilon over training episodes (small map)")
     plt.grid(True)
-    plt.savefig("epsilon-QRM-normal-1.png", dpi=300, bbox_inches='tight')
+    plt.savefig("epsilon-QRM-small-1.png", dpi=300, bbox_inches='tight')
     plt.show()
 
     #training scores graph
@@ -363,9 +367,9 @@ def NormalPacMan():
     plt.legend()
     plt.xlabel("Episode")
     plt.ylabel("Score")
-    plt.title("Score per training episode (normal map)")
+    plt.title("Score per training episode (small map)")
     plt.grid(True)
-    plt.savefig("training-scores-QRM-normal-1.png", dpi=300, bbox_inches='tight')
+    plt.savefig("training-scores-QRM-small-1.png", dpi=300, bbox_inches='tight')
     plt.show()
 
     window = 10000
@@ -376,9 +380,9 @@ def NormalPacMan():
     plt.legend()    
     plt.xlabel("Episode")
     plt.ylabel("Steps taken")
-    plt.title("Steps taken per training episode (normal map)")
+    plt.title("Steps taken per training episode (small map)")
     plt.grid(True)
-    plt.savefig("training-steps-QRM-normal-1", dpi=300, bbox_inches='tight')
+    plt.savefig("training-steps-QRM-small-1", dpi=300, bbox_inches='tight')
     plt.show()
 
     window = 10000
@@ -389,9 +393,9 @@ def NormalPacMan():
     plt.legend()
     plt.xlabel("Episode")
     plt.ylabel("Winrate")
-    plt.title("Winrate per training episode (normal map)")
+    plt.title("Winrate per training episode (small map)")
     plt.grid(True)
-    plt.savefig("training-win-QRM-normal-1", dpi=300, bbox_inches='tight')
+    plt.savefig("training-win-QRM-small-1", dpi=300, bbox_inches='tight')
     plt.show()
 
     window = 10000
@@ -402,9 +406,9 @@ def NormalPacMan():
     plt.legend()
     plt.xlabel("Episode")
     plt.ylabel("Number of ghosts eaten")
-    plt.title("Number of ghosts eaten per training episode (normal map)")
+    plt.title("Number of ghosts eaten per training episode (small map)")
     plt.grid(True)
-    plt.savefig("training-eaten-QRM-normal-1", dpi=300, bbox_inches='tight')
+    plt.savefig("training-eaten-QRM-small-1", dpi=300, bbox_inches='tight')
     plt.show()
 
     #-------------------------testing-------------------------#
@@ -419,9 +423,9 @@ def NormalPacMan():
     plt.legend()
     plt.xlabel("Episode")
     plt.ylabel("Average score")
-    plt.title("Average test score every 10k training episodes (normal map)")
+    plt.title("Average test score every 10k training episodes (small map)")
     plt.grid(True)
-    plt.savefig("test-scores-QRM-normal-1", dpi=300, bbox_inches='tight')
+    plt.savefig("test-scores-QRM-small-1", dpi=300, bbox_inches='tight')
     plt.show()
 
     #window = 5
@@ -433,9 +437,9 @@ def NormalPacMan():
     plt.legend()
     plt.xlabel("Episode")
     plt.ylabel("Average number of steps taken")
-    plt.title("Average number of steps taken every 10k training episodes (normal map)")
+    plt.title("Average number of steps taken every 10k training episodes (small map)")
     plt.grid(True)
-    plt.savefig("test-steps-QRM-normal-1", dpi=300, bbox_inches='tight')
+    plt.savefig("test-steps-QRM-small-1", dpi=300, bbox_inches='tight')
     plt.show()
 
     #window = 5
@@ -447,9 +451,9 @@ def NormalPacMan():
     plt.legend()
     plt.xlabel("Episode")
     plt.ylabel("Average Winrate")
-    plt.title("Average winrate every 10k training episodes (normal map)")
+    plt.title("Average winrate every 10k training episodes (small map)")
     plt.grid(True)
-    plt.savefig("test-win-QRM-normal-1", dpi=300, bbox_inches='tight')
+    plt.savefig("test-win-QRM-small-1", dpi=300, bbox_inches='tight')
     plt.show()
 
     plt.plot(testing_episode_x, testing_ghosts_eaten, color = 'black', label='Q-Learning with RM Agent')
@@ -457,9 +461,9 @@ def NormalPacMan():
     plt.legend()
     plt.xlabel("Episode")
     plt.ylabel("Average Number of ghosts eaten")
-    plt.title("Average Number of ghosts eaten every 10k training episodes (normal map)")
+    plt.title("Average Number of ghosts eaten every 10k training episodes (small map)")
     plt.grid(True)
-    plt.savefig("test-eaten-QRM-normal-1", dpi=300, bbox_inches='tight')
+    plt.savefig("test-eaten-QRM-small-1", dpi=300, bbox_inches='tight')
     plt.show()
 
     #---------see for your self--------------
@@ -553,6 +557,7 @@ def ghostHunter():
         start_episode = saved_data['episode'] + 1
         env.q_table = saved_data['q_table']
         q_table_size = saved_data['q_table_size']
+        env.epsilon = saved_data['epsilon']
         eps = saved_data['eps']
         training_scores = saved_data['training_scores']
         training_steps_taken = saved_data['training_steps_taken']
@@ -647,6 +652,7 @@ def ghostHunter():
                 'episode': i,
                 'q_table': env.q_table,
                 'q_table_size': q_table_size,
+                'epsilon': env.epsilon,
                 'eps': eps,
                 'training_scores': training_scores,
                 'training_steps_taken': training_steps_taken,
@@ -696,6 +702,7 @@ def ghostHunter():
             saved_data = pickle.load(f)
         start_episode = saved_data['episode'] + 1
         env.q_table = saved_data['q_table']
+        env.epsilon = saved_data['epsilon']
         QL_q_table_size = saved_data['q_table_size']
         QL_eps = saved_data['eps']
         QL_training_scores = saved_data['training_scores']
@@ -791,6 +798,7 @@ def ghostHunter():
                 'episode': i,
                 'q_table': env.q_table,
                 'q_table_size': q_table_size,
+                'epsilon': env.epsilon,
                 'eps': QL_eps,
                 'training_scores': QL_training_scores,
                 'training_steps_taken': QL_training_steps_taken,
